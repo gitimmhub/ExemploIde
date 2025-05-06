@@ -2,6 +2,7 @@
  *
  * @author eas
  */
+package gals;
 public class MainWindow extends javax.swing.JFrame {
 
     /**
@@ -80,21 +81,30 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonCompileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCompileActionPerformed
-/*
+        //console.setText("Botão clicado!");
+
         Lexico lex = new Lexico();
         Sintatico sint = new Sintatico();
         Semantico sem = new Semantico();
         
         lex.setInput(sourceInput.getText());
-        
+    
         try {
             sint.parse(lex, sem);
+            System.out.println("Compilado com sucesso!");
             console.setText("Compilado com sucesso!");
-        } catch (LexicalError | SyntaticError | SemanticError ex) {
-            console.setText("Problema na compilação: "+ex.getLocalizedMessage());
+        } catch (LexicalError err) {
+            System.err.println("Problema léxico: " + err.getMessage());
+            console.setText("Problema léxico: " + err.getMessage());
+        } catch (SyntacticError err) {
+            System.err.println("Problema sintático: " + err.getMessage());
+            console.setText("Problema sintático: " + err.getMessage());
+        } catch (SemanticError err) {
+            System.err.println("Problema semântico: " + err.getMessage());
+            console.setText("Problema semântico: " + err.getMessage());
         }
-*/
     }//GEN-LAST:event_buttonCompileActionPerformed
+    
 
     /**
      * @param args the command line arguments
