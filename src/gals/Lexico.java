@@ -109,6 +109,7 @@ public class Lexico implements Constants
     {
         return position < input.length();
     }
+    
 
     private char nextChar()
     {
