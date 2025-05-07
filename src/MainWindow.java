@@ -83,7 +83,7 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonCompileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCompileActionPerformed
-        console.setText("Botão clicado!");
+        // console.setText("Botão clicado!");
 
         Lexico lex = new Lexico();
         Sintatico sint = new Sintatico();
