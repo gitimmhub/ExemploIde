@@ -1,4 +1,3 @@
-package gals;
 
 public interface ScannerConstants
 {
@@ -4773,5 +4772,6 @@ public interface ScannerConstants
         "",
         ""
     };
+    
 
 }
