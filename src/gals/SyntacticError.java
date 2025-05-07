@@ -1,3 +1,4 @@
+package gals;
 public class SyntacticError extends AnalysisError
 {
     public SyntacticError(String msg, int position)
