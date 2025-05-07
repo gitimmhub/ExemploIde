@@ -1,8 +1,10 @@
-/**
- *
- * @author eas
- */
-//package gals;
+import gals.Lexico;
+import gals.Sintatico;
+import gals.Semantico;
+import gals.LexicalError;
+import gals.SyntacticError;
+import gals.SemanticError;
+
 public class MainWindow extends javax.swing.JFrame {
 
     /**
