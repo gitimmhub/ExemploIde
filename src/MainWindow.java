@@ -93,8 +93,8 @@ public class MainWindow extends javax.swing.JFrame {
     
         try {
             sint.parse(lex, sem);
-            System.out.println("Compilado com sucesso!");
-            console.setText("Compilado com sucesso!");
+            System.out.println("Compilado com fudendo!");
+            console.setText("Compilado com fudendo!");
         } catch (LexicalError err) {
             System.err.println("Problema léxico: " + err.getMessage());
             console.setText("Problema léxico: " + err.getMessage());
