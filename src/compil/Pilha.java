@@ -42,6 +42,13 @@ public class Pilha {
         return false;
     }
 
+    public int encontrarInt(int index) {
+        if (index < 0 || index >= stack.size()) {
+            throw new IndexOutOfBoundsException("Índice fora dos limites da pilha!");
+        }
+        return stack.get(index);
+    }
+
     public int tamanho() {
         return stack.size();
     }
