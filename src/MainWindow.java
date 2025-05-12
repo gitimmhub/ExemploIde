@@ -105,7 +105,7 @@ public class MainWindow extends javax.swing.JFrame {
         try {
             sint.parse(lex, sem);
             String avisos = sem.avisarNaoUsados();
-            String msg = "Compilado com fudendo!";
+            String msg = "Compilado com sucesso!";
             if (!avisos.isEmpty()) {
                 msg += "\n" + avisos;
             }
