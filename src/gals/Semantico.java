@@ -25,7 +25,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        System.err.println("Action: " + action + " - " + token.getLexeme());
+        System.err.println("Executando ação: " + action);
         switch (action) {
 
             case 1:
@@ -34,7 +34,8 @@ public class Semantico implements Constants {
 
                 idAtual = token.getLexeme();
 
-                Simbolo simboloUsoUse = buscarSimbolo(token.getLexeme());
+                String chaveUsoUse = token.getLexeme() + "#" + escopoAtual;
+                Simbolo simboloUsoUse = symbolTable.get(chaveUsoUse);
                 if (simboloUsoUse != null) {
                     simboloUsoUse.setFlagUsada(true);
                 } else {
@@ -60,17 +61,20 @@ public class Semantico implements Constants {
                         isFuncaoDeclarando = false;
                     }
                 }
-                System.err.println("DEBUG CASE 1: idAtual=" + idAtual + ", escopoAtual=" + escopoAtual);
                 break;
 
             case 2:
-                System.err.println("DEBUG CASE 2: idAtual=" + idAtual + ", escopoAtual=" + escopoAtual);
                 if (idAtual == null)
                     break;
 
                 String chave = idAtual + "#" + escopoAtual;
 
+                // Verifique se o nome já foi usado como parâmetro
                 if (symbolTable.containsKey(chave)) {
+                    Simbolo simboloExistente = symbolTable.get(chave);
+                    if (Boolean.TRUE.equals(simboloExistente.getFlagParametro())) {
+                        throw new SemanticError("Variável '" + idAtual + "' já declarada como parâmetro neste escopo.");
+                    }
                     throw new SemanticError("Variável já declarada neste escopo: " + idAtual);
                 }
 
@@ -88,7 +92,9 @@ public class Semantico implements Constants {
 
                 idAtual = null;
                 inicializarAgora = false;
-                tipoAtual = null; // Limpe aqui, após declarar a variável
+                tipoAtual = null;
+                isVetor = false;
+                    System.err.println(symbolTable);
                 break;
 
             case 3:
@@ -107,8 +113,7 @@ public class Semantico implements Constants {
 
             case 7:
                 if (token.getId() == Constants.t_ID) {
-                    String chaveUso = token.getLexeme() + "#" + escopoAtual;
-                    Simbolo simboloUso = symbolTable.get(chaveUso);
+                    Simbolo simboloUso = buscarSimbolo(token.getLexeme());
                     if (simboloUso != null) {
                         simboloUso.setFlagUsada(true);
                         if (!Boolean.TRUE.equals(simboloUso.getFlagInicializada())) {
@@ -182,6 +187,26 @@ public class Semantico implements Constants {
                 break;
 
             case 24:
+                System.err.println(idAtual);
+                // Cria símbolo para parâmetro
+                if (idAtual != null && tipoAtual != null) {String chaveParam = idAtual + "#" + escopoAtual;
+                    if (symbolTable.containsKey(chaveParam)) {
+                        throw new SemanticError("Parâmetro já declarado neste escopo: " + idAtual);
+                    }
+                    Simbolo simboloParametro = new Simbolo(
+                            tipoAtual,
+                            idAtual,
+                            escopoAtual,
+                            false, // não é vetor (ajuste se aceitar vetor como parâmetro)
+                            false, // não é função
+                            true, // é parâmetro
+                            false, // parâmetro é considerado inicializado
+                            false // não é usado ainda
+                    );
+                    symbolTable.put(chaveParam, simboloParametro);
+                }
+                idAtual = null;
+                tipoAtual = null;
                 break;
 
             case 25:
@@ -246,7 +271,6 @@ public class Semantico implements Constants {
             case 43:
                 pilhaEscopo.push(escopoAtual + 1);
                 escopoAtual = pilhaEscopo.topo();
-                System.err.println("Novo escopo: " + escopoAtual);
                 break;
 
             case 44:
@@ -258,7 +282,6 @@ public class Semantico implements Constants {
                         escopoAtual = 0;
                     }
                 }
-                System.err.println("Escopo após sair do bloco: " + escopoAtual);
                 break;
 
             case 45:
@@ -288,10 +311,6 @@ public class Semantico implements Constants {
             }
         }
 
-        System.out.println("Tabela de símbolos:");
-        for (Simbolo simbolo : symbolTable.values()) {
-            System.out.println(simbolo.getId() + " escopo=" + simbolo.getEscopo() + " usada=" + simbolo.getFlagUsada());
-        }
         return avisos.toString();
     }
 
