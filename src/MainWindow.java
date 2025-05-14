@@ -2,6 +2,7 @@ import gals.Lexico;
 import gals.Sintatico;
 import gals.Semantico;
 
+import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -20,6 +21,10 @@ public class MainWindow extends javax.swing.JFrame {
     public MainWindow() {
         initComponents();
         sourceInput.setText("function int main() {\n    \n}");
+
+        // Define o ícone da janela
+        ImageIcon icon = new ImageIcon(getClass().getResource("imgIDE.jpg"));
+        setIconImage(icon.getImage());
     }
 
     @SuppressWarnings("unchecked")
@@ -37,7 +42,7 @@ public class MainWindow extends javax.swing.JFrame {
         javax.swing.JScrollPane scrollTabela = new javax.swing.JScrollPane(tabelaSimbolos);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("IDE do Professor");
+        setTitle("Rocha, o leão");
         setFont(new java.awt.Font("Andale Mono", 0, 18)); // NOI18N
 
         sourceInput.setColumns(20);
