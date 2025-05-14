@@ -37,7 +37,7 @@ public class MainWindow extends javax.swing.JFrame {
         javax.swing.JScrollPane scrollTabela = new javax.swing.JScrollPane(tabelaSimbolos);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("IDE do Professor");
+        setTitle("IDE do Rocha");
         setFont(new java.awt.Font("Andale Mono", 0, 18)); // NOI18N
 
         sourceInput.setColumns(20);
