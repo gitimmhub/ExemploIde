@@ -1,10 +1,9 @@
 package gals;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import compil.Pilha;
 import compil.Simbolo;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Semantico implements Constants {
     private Map<String, Simbolo> symbolTable = new HashMap<>();
@@ -189,19 +188,19 @@ public class Semantico implements Constants {
             case 24:
                 System.err.println(idAtual);
                 // Cria símbolo para parâmetro
-                if (idAtual != null && tipoAtual != null) {String chaveParam = idAtual + "#" + escopoAtual;
+                if (idAtual != null && tipoAtual != null) {String chaveParam = idAtual + "#" + (escopoAtual + 1);
                     if (symbolTable.containsKey(chaveParam)) {
                         throw new SemanticError("Parâmetro já declarado neste escopo: " + idAtual);
                     }
                     Simbolo simboloParametro = new Simbolo(
                             tipoAtual,
                             idAtual,
-                            escopoAtual,
-                            false, // não é vetor (ajuste se aceitar vetor como parâmetro)
-                            false, // não é função
-                            true, // é parâmetro
-                            false, // parâmetro é considerado inicializado
-                            false // não é usado ainda
+                            (escopoAtual + 1),
+                            false,
+                            false,
+                            true,
+                            false,
+                            false
                     );
                     symbolTable.put(chaveParam, simboloParametro);
                 }
