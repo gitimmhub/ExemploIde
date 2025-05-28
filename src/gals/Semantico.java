@@ -14,6 +14,7 @@ public class Semantico implements Constants {
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
+    private int escopoMax = 0;
 
     public compil.TabelaSimbolos getTabelaSimbolos() {
         compil.TabelaSimbolos tabela = new compil.TabelaSimbolos();
@@ -208,7 +209,7 @@ public class Semantico implements Constants {
                 tipoAtual = null;
                 break;
 
-            case 25:
+            case 25: // bloco
                 break;
 
             case 26:
@@ -267,8 +268,9 @@ public class Semantico implements Constants {
                 }
                 break;
 
-            case 43:
-                pilhaEscopo.push(escopoAtual + 1);
+            case 43: // BLOCO
+                escopoMax = escopoMax + 1;
+                pilhaEscopo.push(escopoMax); // sempre um novo escopo único
                 escopoAtual = pilhaEscopo.topo();
                 break;
 
