@@ -11,6 +11,7 @@ public class Semantico implements Constants {
     private boolean isVetor = false;
     private Integer escopoAtual = 0;
     private String idAtual = null;
+    private int escopoMax = 0;
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
@@ -268,7 +269,8 @@ public class Semantico implements Constants {
                 break;
 
             case 43:
-                pilhaEscopo.push(escopoAtual + 1);
+                escopoMax = escopoMax +1;
+                pilhaEscopo.push(escopoMax);
                 escopoAtual = pilhaEscopo.topo();
                 break;
 
