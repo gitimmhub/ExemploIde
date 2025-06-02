@@ -9,8 +9,10 @@ public class Semantico implements Constants {
     private Map<String, Simbolo> symbolTable = new HashMap<>();
     private String tipoAtual = null;
     private boolean isVetor = false;
+    private int tamanhoVetor = 0;
     private Integer escopoAtual = 0;
     private String idAtual = null;
+    private int escopoMax = 0;
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
@@ -95,18 +97,26 @@ public class Semantico implements Constants {
                 isVetor = false;
                     System.err.println(symbolTable);
                 break;
-
             case 3:
-                tipoAtual = token.getLexeme();
+                tipoAtual = token.getLexeme();  // Armazena o tipo base
+                isVetor = false;                // Inicialmente, assume que não é vetor
                 break;
 
             case 4:
-                isVetor = true;
+                tipoAtual += "[]";             // Marca como tipo vetor (ex: int[])
+                isVetor = true;                // Marca a flag global
                 break;
 
             case 5:
+            /* 
+                try {
+                    tamanhoAtual = Integer.parseInt(token.getLexeme());  // ex: "10" → 10
+                } catch (NumberFormatException e) {
+                    System.err.println("Erro: tamanho do vetor inválido: " + token.getLexeme());
+                    tamanhoAtual = -1;
+                }
                 break;
-
+            */
             case 6:
                 break;
 
@@ -268,7 +278,8 @@ public class Semantico implements Constants {
                 break;
 
             case 43:
-                pilhaEscopo.push(escopoAtual + 1);
+                escopoMax = escopoMax +1;
+                pilhaEscopo.push(escopoMax);
                 escopoAtual = pilhaEscopo.topo();
                 break;
 
