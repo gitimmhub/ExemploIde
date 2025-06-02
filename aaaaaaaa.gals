@@ -5,8 +5,9 @@ Language = Java
 ScannerName = Lexico
 ParserName = Sintatico
 SemanticName = Semantico
+Package = gals
 ScannerCaseSensitive = true
-ScannerTable = Full
+ScannerTable = Compact
 Input = String
 Parser = SLR
 #RegularDefinitions
@@ -114,7 +115,8 @@ BOOLEAN = ID: "bool"
 <tipo>
 <tipovar>
 <tipo_vetor_opcional>
-<id>
+<id_usado>
+<id_declara>
 <index>
 <if>
 <auxif>
@@ -152,7 +154,6 @@ BOOLEAN = ID: "bool"
 <op_arit_alta>
 <fim_linha>
 #Grammar
-// Lista de Comandos
 <lista_comandos> ::= <comando> <auxcomando>;
 <auxcomando> ::= <lista_comandos> | î;
 
@@ -169,20 +170,20 @@ BOOLEAN = ID: "bool"
             | <atribuicao> #21;
 
 // FUNÇÃO
-<funcao> ::= FUNCAO <funcao_tipo> #23 <id> PARENTESES_ABRE <param> #24 PARENTESES_FECHA <bloco> #25 
-          | FUNCAO <funcao_tipo> #23 <id> PARENTESES_ABRE PARENTESES_FECHA <bloco> #25;
+<funcao> ::= FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE <param> #24 PARENTESES_FECHA <bloco> #25 
+          | FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE PARENTESES_FECHA <bloco> #25;
 
 <funcao_tipo> ::= CHAR | INT | FLOAT | STRING | VOID | BOOLEAN;
 
-<param> ::= <id> <paramaux>
+<param> ::= <id_declara> <paramaux>
          | <decl_var_simples>;
 
 <paramaux> ::= <virgula> <param> | î;
 <virgula> ::= VIRGULA;
 
 // INVOCACAO DE FUNÇÃO
-<funcao_invoca> ::= <id> PARENTESES_ABRE <invoca_param> #41 PARENTESES_FECHA <fim_linha>
-                 | <id> PARENTESES_ABRE PARENTESES_FECHA <fim_linha>;
+<funcao_invoca> ::= <id_usado> PARENTESES_ABRE <invoca_param> #41 PARENTESES_FECHA <fim_linha>
+                 | <id_usado> PARENTESES_ABRE PARENTESES_FECHA <fim_linha>;
 
 <invoca_param> ::= <exp11> 
                  | <exp11> <virgula> <invoca_param> #41;
@@ -191,7 +192,7 @@ BOOLEAN = ID: "bool"
 <return> ::= RETORNO <exp1> PONTO_VIRGULA;
 
 // ENTRADA / SAÍDA
-<entrada> ::= ENTRADA <id> <fim_linha>;
+<entrada> ::= ENTRADA <id_usado> <fim_linha>;
 <saida> ::= SAIDA <exp1> <tipagem_saida> #19;
 
 <tipagem_saida> ::= DOIS_PONTOS DOIS_PONTOS <proxsaida> #20 
@@ -205,30 +206,32 @@ BOOLEAN = ID: "bool"
 <lista_variaveis_aux> ::= VIRGULA <variavel_init> <lista_variaveis_aux> 
                         | î;
 
-<variavel_init> ::= <id> <indexdeclara_opcional> <init_opcional> #9;
+<variavel_init> ::= <id_declara> <indexdeclara_opcional> <init_opcional> #9;
 <indexdeclara_opcional> ::= <indexdeclara> | î;
-<indexdeclara> ::= COLCHETE_ABRE #4 INTEIRO COLCHETE_FECHA #6; // ← Marca colchete como uso de vetor
+<indexdeclara> ::= COLCHETE_ABRE INTEIRO #5 COLCHETE_FECHA;
 
-<init_opcional> ::= RECEBE #42 <exp1> 
-                 | î;
+<init_opcional> ::= RECEBE #42 <exp1>
+                 | #42 î;
 
 // Declaração de variável simples
-<decl_var_simples> ::= <tipo> <id> <variavelsimplesaux>;
+<decl_var_simples> ::= <tipo> <id_declara> <variavelsimplesaux>;
 <variavelsimplesaux> ::= RECEBE #42 <exp1> <ultimoaux> 
                        | <ultimoaux>;
 
 <ultimoaux> ::= <virgula> <decl_var_simples> #37 
               | î;
 
-// TIPOS (com suporte a vetor int[] etc.)
-<tipo> ::= <tipovar> <tipo_vetor_opcional> #3;
+// TIPOS
+<tipo> ::= <tipovar> <tipo_vetor_opcional>;
 
-<tipovar> ::= INT | FLOAT | CHAR | STRING;
+<tipovar> ::= INT #3| FLOAT #3| CHAR #3| STRING #3;
 
-<tipo_vetor_opcional> ::= COLCHETE_ABRE #4 COLCHETE_FECHA | î; // ← Marca uso de vetor como tipo
+<tipo_vetor_opcional> ::= COLCHETE_ABRE #4 COLCHETE_FECHA | î;
 
 // ID e complementos
-<id> ::= ID #1;
+<id_usado> ::= ID #1;
+<id_declara> ::= ID #1;
+
 <index> ::= COLCHETE_ABRE INTEIRO COLCHETE_FECHA;
 
 // IF, ELSE IF, ELSE
@@ -265,8 +268,8 @@ BOOLEAN = ID: "bool"
 <instrucao_simples> ::= <atribuicao> 
                       | <ver_fim>;
 
-<atribuicao> ::= <id> RECEBE #42 <exp1> <fim_linha>
-               | <id> <index> RECEBE #42 <exp1> <fim_linha>;  // Atribuição a vetor
+<atribuicao> ::= <id_usado> RECEBE #42 <exp1> <fim_linha>
+               | <id_usado> <index> RECEBE #42 <exp1> <fim_linha>;
 
 <ver_fim> ::= <exp1> <fim_linha>;
 
@@ -306,10 +309,10 @@ BOOLEAN = ID: "bool"
          | DECIMAL 
          | CARACTERE 
          | TEXTO 
-         | <id> 
-         | <id> <index> #16 
+         | <id_usado> 
+         | <id_usado> <index> #16 
          | PARENTESES_ABRE <ver_fim> PARENTESES_FECHA
-         | COLCHETE_ABRE <lista_exp> COLCHETE_FECHA #45; // ← Suporte a vetores literais
+         | COLCHETE_ABRE <lista_exp> COLCHETE_FECHA #45;
 
 <lista_exp> ::= <exp1> <lista_exp_aux>;
 <lista_exp_aux> ::= VIRGULA <exp1> <lista_exp_aux> 
