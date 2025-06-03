@@ -123,8 +123,20 @@ public class Semantico implements Constants {
             case 7:
                 if (token.getId() == Constants.t_ID) {
                     Simbolo simboloUso = buscarSimbolo(token.getLexeme());
+
+                    if (inicializarAgora) {
+                        // Se for inicialização, marca como inicializada
+                        if (simboloUso != null) {
+                            simboloUso.setFlagInicializada(true);
+                        } else {
+                            throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
+                        }
+                    }
                     if (simboloUso != null) {
                         simboloUso.setFlagUsada(true);
+
+                        // Só lance erro se o contexto exigir variável inicializada
+                        // Se quiser permitir uso mesmo sem inicializar, comente a linha abaixo:
                         if (!Boolean.TRUE.equals(simboloUso.getFlagInicializada())) {
                             throw new SemanticError(
                                     "Variável '" + simboloUso.getId() + "' usada sem estar inicializada.");
