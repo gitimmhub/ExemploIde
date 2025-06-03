@@ -13,6 +13,9 @@ public class Semantico implements Constants {
     private int tamanhoVetor = 0;
     private Integer escopoAtual = 0;
     private String idAtual = null;
+    private Integer valorAtualInt = null;
+    private Double valorAtualDouble = null;
+    private String valorAtualString = null;
     private int escopoMax = 0;
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
@@ -29,6 +32,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
+        System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
         switch (action) {
 
             case 1:
@@ -42,8 +46,10 @@ public class Semantico implements Constants {
                 if (simboloUsoUse != null) {
                     simboloUsoUse.setFlagUsada(true);
 
-                    // Geração de código para carregar valor da variável
-                    geradorAssembly.gerarInstrucao("LD", token.getLexeme());
+                    // Só gera LD se for identificador válido
+                    if (token.getId() == Constants.t_ID) {
+                        geradorAssembly.gerarInstrucao("LD", token.getLexeme());
+                    }
                 } else {
                     if (tipoAtual == null) {
                         throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
@@ -104,7 +110,7 @@ public class Semantico implements Constants {
                 // Verifica se há inicialização
                 if (inicializarAgora) {
                     String valor = token.getLexeme(); // Captura o valor do token
-                    geradorAssembly.gerarAtribuicao(idAtual, valor); // Gera o código de atribuição
+                    geradorAssembly.gerarInstrucao("STO", idAtual); // Gera o código de atribuição
                 }
 
                 idAtual = null;
@@ -125,10 +131,13 @@ public class Semantico implements Constants {
                 break;
 
             case 5:
+                if (token == null || token.getId() == Constants.t_INTEIRO) {
+                    valorAtualInt = token.getLexeme() != null ? Integer.parseInt(token.getLexeme()) : 1;
+                }
                 try {
                     tamanhoVetor = Integer.parseInt(token.getLexeme());  // ex: "10" → 10
                 } catch (NumberFormatException e) {
-                    System.err.println("Erro: tamanho do vetor inválido: " + token.getLexeme());
+                    // System.err.println("Erro: tamanho do vetor inválido: " + token.getLexeme());
                     tamanhoVetor = 1; // padrão
                 }
                 break;
@@ -155,8 +164,10 @@ public class Semantico implements Constants {
                             throw new SemanticError(
                                     "Variável '" + simboloUso.getId() + "' usada sem estar inicializada.");
                         }
-                        // Gera LD no uso simples da variável
-                        geradorAssembly.gerarInstrucao("LD", simboloUso.getId());
+                        // Só gera LD se for identificador válido
+                        if (token.getId() == Constants.t_ID) {
+                            geradorAssembly.gerarInstrucao("LD", simboloUso.getId());
+                        }
                     } else {
                         throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                     }
@@ -168,6 +179,33 @@ public class Semantico implements Constants {
                 break;
 
             case 9:
+                if (token != null) {
+                    String valor = token.getLexeme();
+                    System.out.println("Valor encontrado: " + valor);
+                    System.out.println("Token ID: " + token.getId());
+                    valorAtualString = valor;
+
+                    if (token.getId() == Constants.t_INTEIRO) {
+                        System.out.println("Valor Inteiro: " + valor);
+                        valorAtualInt = Integer.parseInt(valor);
+                        String valorBinario = Integer.toBinaryString(valorAtualInt);
+                        System.out.println("Valor Inteiro em binário: " + valorBinario);
+                        geradorAssembly.gerarInstrucao("LDI", valorBinario);
+                    } else if (token.getId() == Constants.t_DECIMAL || token.getId() == Constants.t_FLOAT) {
+                        System.out.println("Valor Decimal/Float: " + valor);
+                        valorAtualDouble = Double.parseDouble(valor.replace(',', '.'));
+
+                        int bits = Float.floatToIntBits(valorAtualDouble.floatValue());
+                        System.out.println("Valor Decimal/Float em bits: " + bits);
+                        String valorBinario = Integer.toBinaryString(bits);
+                        System.out.println("Valor Decimal/Float em binário: " + valorBinario);
+                        geradorAssembly.gerarInstrucao("LDI", valorBinario);
+                    } else if (valor.startsWith("\"") && valor.endsWith("\"")) {
+                        // Verifica se é uma string entre aspas duplas
+                        System.out.println("Valor String: " + valor);
+                        geradorAssembly.gerarInstrucao("LDI", valor);
+                    }
+                }
                 inicializarAgora = true;
                 break;
 
@@ -211,9 +249,49 @@ public class Semantico implements Constants {
                 break;
 
             case 17:
+                // Gera instrução para ler do dispositivo de entrada e armazenar na variável atual
+                if (idAtual != null) {
+                    geradorAssembly.gerarInstrucao("LD", "$in_port"); // Lê do dispositivo de entrada
+                    geradorAssembly.gerarInstrucao("STO", idAtual);   // Armazena na variável
+                    // Marca a variável como inicializada
+                    Simbolo simboloEntrada = buscarSimbolo(idAtual);
+                    if (simboloEntrada != null) {
+                        simboloEntrada.setFlagInicializada(true);
+                        simboloEntrada.setFlagUsada(true);
+                    }
+                }
                 break;
 
             case 18:
+                // Saída de dados: imprime string ou valor de variável
+                if (token != null) {
+                    String valor = token.getLexeme();
+                    if(valorAtualString != null) {
+                        valor = valorAtualString; // Usa o valor da string atual
+                    } else if (valorAtualInt != null) {
+                        geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString()); // Usa o valor inteiro atual
+                        geradorAssembly.gerarInstrucao("STO", "$out_port");
+                        valorAtualInt = null; // Limpa após uso
+                    } else if (valorAtualDouble != null) {
+                        valor = String.valueOf(valorAtualDouble); // Usa o valor decimal atual
+                    }
+                    // Se for string literal (entre aspas)
+                    if (valor.startsWith("\"") && valor.endsWith("\"")) {
+                        // Imprime string diretamente
+                        geradorAssembly.gerarInstrucao("LDI", valor);
+                        geradorAssembly.gerarInstrucao("STO", "$out_port");
+                        valorAtualString = null; // Limpa após uso
+                    } else if (token.getId() == Constants.t_ID) {
+                        // Se for variável, carrega valor e imprime
+                        Simbolo simboloSaida = buscarSimbolo(valor);
+                        if (simboloSaida != null) {
+                            geradorAssembly.gerarInstrucao("LD", simboloSaida.getId());
+                            geradorAssembly.gerarInstrucao("STO", "$out_port");
+                        } else {
+                            throw new SemanticError("Variável '" + valor + "' usada sem declaração.");
+                        }
+                    }
+                }
                 break;
 
             case 19:
@@ -316,8 +394,11 @@ public class Semantico implements Constants {
                 break;
 
             case 41:
-                geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
-                geradorAssembly.gerarInstrucao("STO", "$out_port");
+                // Só gera LDI se for um literal numérico
+                if (token != null && (token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_DECIMAL)) {
+                    geradorAssembly.gerarInstrucao("LDI", idAtual);
+                    geradorAssembly.gerarInstrucao("STO", "$out_port");
+                }
                 break;
 
             case 42:
@@ -357,6 +438,14 @@ public class Semantico implements Constants {
 
             case 46:
                 isVetor = true;
+                break;
+
+            case 48:
+                // Se for string literal (entre aspas)
+                if (token != null) {
+                    String valor = token.getLexeme();
+                    valorAtualString = valor;
+                }
                 break;
 
             default:

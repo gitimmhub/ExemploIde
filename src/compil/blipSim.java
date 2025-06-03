@@ -37,7 +37,6 @@ public class blipSim {
 
     // Gera código para atribuição
     public void gerarAtribuicao(String id, String valor) {
-        textSection.append("LDI ").append(valor).append("\n");
         textSection.append("STO ").append(id).append("\n");
 
         System.out.println("Gerando atribuição: " + id + " = " + valor);
@@ -81,7 +80,7 @@ public class blipSim {
 
     // Gera o código completo
     public String gerarCodigoCompleto() {
-        textSection.append("HLT 0\n");
+        codigo.append("HLT 0\n");
         return dataSection.toString() + textSection.toString() + codigo.toString();
     }
 }
