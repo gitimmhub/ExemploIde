@@ -2,6 +2,8 @@ package gals;
 
 import compil.Pilha;
 import compil.Simbolo;
+import compil.blipSim;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +19,8 @@ public class Semantico implements Constants {
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
 
+    private blipSim geradorAssembly = new blipSim(); // Instância do GeradorAssembly
+
     public compil.TabelaSimbolos getTabelaSimbolos() {
         compil.TabelaSimbolos tabela = new compil.TabelaSimbolos();
         for (Simbolo simbolo : symbolTable.values()) {
@@ -26,7 +30,6 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        System.err.println("Executando ação: " + action);
         switch (action) {
 
             case 1:
@@ -64,7 +67,7 @@ public class Semantico implements Constants {
                 }
                 break;
 
-            case 2:
+            case 2: // Declaração de variável
                 if (idAtual == null)
                     break;
 
@@ -72,10 +75,6 @@ public class Semantico implements Constants {
 
                 // Verifique se o nome já foi usado como parâmetro
                 if (symbolTable.containsKey(chave)) {
-                    Simbolo simboloExistente = symbolTable.get(chave);
-                    if (Boolean.TRUE.equals(simboloExistente.getFlagParametro())) {
-                        throw new SemanticError("Variável '" + idAtual + "' já declarada como parâmetro neste escopo.");
-                    }
                     throw new SemanticError("Variável já declarada neste escopo: " + idAtual);
                 }
 
@@ -91,12 +90,21 @@ public class Semantico implements Constants {
 
                 symbolTable.put(chave, simbolo);
 
+                // Gera a declaração no .data
+                geradorAssembly.gerarDataSection(getTabelaSimbolos().getListSimbolos());
+
+                // Verifica se há inicialização
+                if (inicializarAgora) {
+                    String valor = token.getLexeme(); // Captura o valor do token
+                    geradorAssembly.gerarAtribuicao(idAtual, valor); // Gera o código de atribuição
+                }
+
                 idAtual = null;
                 inicializarAgora = false;
                 tipoAtual = null;
                 isVetor = false;
-                    System.err.println(symbolTable);
                 break;
+                
             case 3:
                 tipoAtual = token.getLexeme();  // Armazena o tipo base
                 isVetor = false;                // Inicialmente, assume que não é vetor
@@ -128,6 +136,7 @@ public class Semantico implements Constants {
                         // Se for inicialização, marca como inicializada
                         if (simboloUso != null) {
                             simboloUso.setFlagInicializada(true);
+                            geradorAssembly.gerarEntrada(simboloUso.getId());
                         } else {
                             throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                         }
@@ -187,17 +196,28 @@ public class Semantico implements Constants {
             case 20:
                 break;
 
-            case 21:
-                if (token.getId() == Constants.t_ID) {
-                    String chaveAttr = token.getLexeme() + "#" + escopoAtual;
-                    Simbolo simboloAttr = buscarSimbolo(token.getLexeme());
-                    if (simboloAttr != null) {
-                        simboloAttr.setFlagInicializada(true);
-                        simboloAttr.setFlagUsada(true);
-                        symbolTable.put(chaveAttr, simboloAttr);
+           case 21: // Atribuição
+            if (token.getId() == Constants.t_ID) {
+                String chaveAttr = token.getLexeme() + "#" + escopoAtual;
+                Simbolo simboloAttr = buscarSimbolo(token.getLexeme());
+                if (simboloAttr != null) {
+                    simboloAttr.setFlagInicializada(true);
+                    simboloAttr.setFlagUsada(true);
+                    symbolTable.put(chaveAttr, simboloAttr);
+
+                    // Captura o valor atribuído a partir do próximo token ou contexto
+                    String valor = token.getLexeme(); // Substitua por lógica para capturar o valor real
+                    if (valor == null || valor.isEmpty()) {
+                        throw new SemanticError("Valor inválido ou não encontrado para a atribuição.");
                     }
+
+                    // Gera código para atribuição
+                    geradorAssembly.gerarAtribuicao(simboloAttr.getId(), valor);
+                } else {
+                    throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                 }
-                break;
+            }
+            break;
 
             case 22:
                 break;
@@ -208,7 +228,6 @@ public class Semantico implements Constants {
                 break;
 
             case 24:
-                System.err.println(idAtual);
                 // Cria símbolo para parâmetro
                 if (idAtual != null && tipoAtual != null) {String chaveParam = idAtual + "#" + (escopoAtual + 1);
                     if (symbolTable.containsKey(chaveParam)) {
@@ -285,6 +304,7 @@ public class Semantico implements Constants {
                     if (simboloAttr != null) {
                         simboloAttr.setFlagInicializada(true);
                         simboloAttr.setFlagUsada(true);
+                        geradorAssembly.gerarSaida(simboloAttr.getId());
                     }
                 }
                 break;
@@ -317,6 +337,11 @@ public class Semantico implements Constants {
             default:
                 break;
         }
+    }
+
+    public String gerarCodigoAssembly() {
+    // Gera o código completo combinando as seções .data e .text
+    return geradorAssembly.gerarCodigoCompleto();
     }
 
     public String avisarNaoUsados() {
