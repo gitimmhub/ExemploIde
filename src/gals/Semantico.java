@@ -3,7 +3,6 @@ package gals;
 import compil.Pilha;
 import compil.Simbolo;
 import compil.blipSim;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +41,9 @@ public class Semantico implements Constants {
                 Simbolo simboloUsoUse = symbolTable.get(chaveUsoUse);
                 if (simboloUsoUse != null) {
                     simboloUsoUse.setFlagUsada(true);
+
+                    // Geração de código para carregar valor da variável
+                    geradorAssembly.gerarInstrucao("LD", token.getLexeme());
                 } else {
                     if (tipoAtual == null) {
                         throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
@@ -67,6 +69,7 @@ public class Semantico implements Constants {
                 }
                 break;
 
+
             case 2: // Declaração de variável
                 if (idAtual == null)
                     break;
@@ -88,6 +91,11 @@ public class Semantico implements Constants {
                         inicializarAgora,
                         false);
 
+                // Salve o tamanho do vetor se for vetor
+                // if (isVetor) {
+                //     simbolo.setTamanhoVetor(tamanhoVetor > 0 ? tamanhoVetor : 1); // padrão 1 se não informado
+                // }
+
                 symbolTable.put(chave, simbolo);
 
                 // Gera a declaração no .data
@@ -103,6 +111,7 @@ public class Semantico implements Constants {
                 inicializarAgora = false;
                 tipoAtual = null;
                 isVetor = false;
+                tamanhoVetor = 0; // <-- Limpe o tamanho do vetor após uso
                 break;
                 
             case 3:
@@ -116,15 +125,14 @@ public class Semantico implements Constants {
                 break;
 
             case 5:
-            /* 
                 try {
-                    tamanhoAtual = Integer.parseInt(token.getLexeme());  // ex: "10" → 10
+                    tamanhoVetor = Integer.parseInt(token.getLexeme());  // ex: "10" → 10
                 } catch (NumberFormatException e) {
                     System.err.println("Erro: tamanho do vetor inválido: " + token.getLexeme());
-                    tamanhoAtual = -1;
+                    tamanhoVetor = 1; // padrão
                 }
                 break;
-            */
+
             case 6:
                 break;
 
@@ -133,28 +141,28 @@ public class Semantico implements Constants {
                     Simbolo simboloUso = buscarSimbolo(token.getLexeme());
 
                     if (inicializarAgora) {
-                        // Se for inicialização, marca como inicializada
                         if (simboloUso != null) {
                             simboloUso.setFlagInicializada(true);
-                            geradorAssembly.gerarEntrada(simboloUso.getId());
+                            geradorAssembly.gerarInstrucao("LD", "$in_port");
+                            geradorAssembly.gerarInstrucao("STO", simboloUso.getId());
                         } else {
                             throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                         }
                     }
                     if (simboloUso != null) {
                         simboloUso.setFlagUsada(true);
-
-                        // Só lance erro se o contexto exigir variável inicializada
-                        // Se quiser permitir uso mesmo sem inicializar, comente a linha abaixo:
                         if (!Boolean.TRUE.equals(simboloUso.getFlagInicializada())) {
                             throw new SemanticError(
                                     "Variável '" + simboloUso.getId() + "' usada sem estar inicializada.");
                         }
+                        // Gera LD no uso simples da variável
+                        geradorAssembly.gerarInstrucao("LD", simboloUso.getId());
                     } else {
                         throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                     }
                 }
                 break;
+
 
             case 8:
                 break;
@@ -170,6 +178,24 @@ public class Semantico implements Constants {
                 break;
 
             case 12:
+                // Geração de código para soma e subtração
+                if (token != null) {
+                    String operador = token.getLexeme();
+                    // Exemplo: idAtual é o próximo operando (ajuste conforme seu parser)
+                    if (operador.equals("+")) {
+                        if (token.getId() == Constants.t_INTEIRO) {
+                            geradorAssembly.gerarInstrucao("ADDI", token.getLexeme());
+                        } else {
+                            geradorAssembly.gerarInstrucao("ADD", idAtual);
+                        }
+                    } else if (operador.equals("-")) {
+                        if (token.getId() == Constants.t_INTEIRO) {
+                            geradorAssembly.gerarInstrucao("SUBI", token.getLexeme());
+                        } else {
+                            geradorAssembly.gerarInstrucao("SUB", idAtual);
+                        }
+                    }
+                }
                 break;
 
             case 13:
@@ -196,28 +222,23 @@ public class Semantico implements Constants {
             case 20:
                 break;
 
-           case 21: // Atribuição
-            if (token.getId() == Constants.t_ID) {
-                String chaveAttr = token.getLexeme() + "#" + escopoAtual;
-                Simbolo simboloAttr = buscarSimbolo(token.getLexeme());
-                if (simboloAttr != null) {
-                    simboloAttr.setFlagInicializada(true);
-                    simboloAttr.setFlagUsada(true);
-                    symbolTable.put(chaveAttr, simboloAttr);
+           case 21:
+                if (token.getId() == Constants.t_ID) {
+                    String chaveAttr = token.getLexeme() + "#" + escopoAtual;
+                    Simbolo simboloAttr = buscarSimbolo(token.getLexeme());
+                    if (simboloAttr != null) {
+                        simboloAttr.setFlagInicializada(true);
+                        simboloAttr.setFlagUsada(true);
+                        symbolTable.put(chaveAttr, simboloAttr);
 
-                    // Captura o valor atribuído a partir do próximo token ou contexto
-                    String valor = token.getLexeme(); // Substitua por lógica para capturar o valor real
-                    if (valor == null || valor.isEmpty()) {
-                        throw new SemanticError("Valor inválido ou não encontrado para a atribuição.");
+                        // Carrega valor já atribuído antes (via expressão)
+                        geradorAssembly.gerarInstrucao("STO", simboloAttr.getId());
+                    } else {
+                        throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                     }
-
-                    // Gera código para atribuição
-                    geradorAssembly.gerarAtribuicao(simboloAttr.getId(), valor);
-                } else {
-                    throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                 }
-            }
-            break;
+                break;
+
 
             case 22:
                 break;
@@ -295,6 +316,8 @@ public class Semantico implements Constants {
                 break;
 
             case 41:
+                geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
+                geradorAssembly.gerarInstrucao("STO", "$out_port");
                 break;
 
             case 42:
@@ -304,9 +327,11 @@ public class Semantico implements Constants {
                     if (simboloAttr != null) {
                         simboloAttr.setFlagInicializada(true);
                         simboloAttr.setFlagUsada(true);
-                        geradorAssembly.gerarSaida(simboloAttr.getId());
+                        geradorAssembly.gerarInstrucao("LD", simboloAttr.getId());
+                        geradorAssembly.gerarInstrucao("STO", "$out_port");
                     }
                 }
+
                 break;
 
             case 43:

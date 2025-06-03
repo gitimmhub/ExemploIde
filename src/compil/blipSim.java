@@ -6,10 +6,12 @@ public class blipSim {
     
     private StringBuilder dataSection;
     private StringBuilder textSection;
+    private StringBuilder codigo;
 
     public blipSim() {
         dataSection = new StringBuilder(".data\n");
         textSection = new StringBuilder(".text\n");
+        codigo = new StringBuilder();
     }
 
     // Gera o .data com base na tabela de símbolos
@@ -73,9 +75,13 @@ public class blipSim {
         textSection.append("STO ").append(resultado).append("\n");
     }
 
+    public void gerarInstrucao(String instrucao, String operando) {
+        codigo.append(instrucao).append(" ").append(operando).append("\n");
+    }
+
     // Gera o código completo
     public String gerarCodigoCompleto() {
         textSection.append("HLT 0\n");
-        return dataSection.toString() + textSection.toString();
+        return dataSection.toString() + textSection.toString() + codigo.toString();
     }
 }
