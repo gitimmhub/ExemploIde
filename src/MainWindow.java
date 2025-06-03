@@ -30,6 +30,7 @@ public class MainWindow extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         console = new javax.swing.JTextArea();
         buttonCompile = new javax.swing.JButton();
+        buttonAssembly = new javax.swing.JButton();
 
         tabelaSimbolosModel = new DefaultTableModel(
                 new Object[] { "Tipo", "Id", "Escopo", "Vetor", "Função", "Parâmetro", "Inicializada", "Usada" }, 0);
@@ -61,6 +62,14 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        buttonAssembly.setFont(new java.awt.Font("Helvetica Neue", 0, 14));
+        buttonAssembly.setText("Ver Assembly");
+        buttonAssembly.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mostrarAssembly();
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
 
@@ -76,7 +85,9 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
                                                 layout.createSequentialGroup()
                                                         .addGap(0, 0, Short.MAX_VALUE)
-                                                        .addComponent(buttonCompile)))
+                                                        .addComponent(buttonCompile)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(buttonAssembly)))
                                 .addContainerGap()));
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -90,7 +101,9 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(scrollTabela, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(3, 3, 3)
-                                .addComponent(buttonCompile)));
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(buttonCompile)
+                                        .addComponent(buttonAssembly))));
 
         pack();
     }
@@ -144,6 +157,28 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }
 
+    // Método para mostrar o código assembly em uma nova janela
+    private void mostrarAssembly() {
+        // Substitua esta linha pelo seu método real de geração de assembly
+        String codigoAssembly = gerarAssembly();
+
+        javax.swing.JFrame frameAssembly = new javax.swing.JFrame("Código Assembly");
+        javax.swing.JTextArea areaAssembly = new javax.swing.JTextArea(20, 60);
+        areaAssembly.setText(codigoAssembly);
+        areaAssembly.setEditable(false);
+        areaAssembly.setFont(new java.awt.Font("Monospaced", 0, 14));
+        frameAssembly.add(new javax.swing.JScrollPane(areaAssembly));
+        frameAssembly.pack();
+        frameAssembly.setLocationRelativeTo(this);
+        frameAssembly.setVisible(true);
+    }
+
+    // Exemplo de método para gerar assembly (substitua pelo seu real)
+    private String gerarAssembly() {
+        // Aqui você deve retornar o código assembly gerado pelo seu compilador
+        return "; Exemplo de código assembly\nMOV AX, BX\nADD AX, 1";
+    }
+
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -166,6 +201,7 @@ public class MainWindow extends javax.swing.JFrame {
 
     // Variables declaration - do not modify
     private javax.swing.JButton buttonCompile;
+    private javax.swing.JButton buttonAssembly;
     private javax.swing.JTextArea console;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
