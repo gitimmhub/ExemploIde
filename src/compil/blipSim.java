@@ -16,8 +16,9 @@ public class blipSim {
 
     // Gera o .data com base na tabela de símbolos
     public void gerarDataSection(List<Simbolo> simbolos) {
+        java.util.HashSet<String> idsAdicionados = new java.util.HashSet<>();
         for (Simbolo simbolo : simbolos) {
-            if (!simbolo.getFlagFuncao()) { // Ignora funções
+            if (!simbolo.getFlagFuncao() && idsAdicionados.add(simbolo.getId())) { // Ignora funções e repetidos
                 dataSection.append(simbolo.getId()).append(" : 0\n");
             }
         }

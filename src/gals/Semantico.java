@@ -16,6 +16,7 @@ public class Semantico implements Constants {
     private Integer valorAtualInt = null;
     private Double valorAtualDouble = null;
     private String valorAtualString = null;
+    private String operacaoSimbolo = null;
     private int escopoMax = 0;
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
@@ -192,8 +193,7 @@ case 7:
 
                     if (token.getId() == Constants.t_INTEIRO) {
                         valorAtualInt = Integer.parseInt(valor);
-                        String valorBinario = Integer.toBinaryString(valorAtualInt);
-                        geradorAssembly.gerarInstrucao("LDI", valorBinario);
+                        geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
                     } else if (token.getId() == Constants.t_DECIMAL || token.getId() == Constants.t_FLOAT) {
                         valorAtualDouble = Double.parseDouble(valor.replace(',', '.'));
                         int bits = Float.floatToIntBits(valorAtualDouble.floatValue());
@@ -217,16 +217,21 @@ case 7:
                 if (token != null && ultimoOperando != null) {
                     String operador = token.getLexeme();
                     if (operador.equals("+")) {
+                        operacaoSimbolo = "+";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
-                            geradorAssembly.gerarInstrucao("ADDI", ultimoOperando);
+                            
+                            geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
+                            geradorAssembly.gerarInstrucao("STO", idAtual);
                         } else if (ultimoOperandoTipo == Constants.t_ID) {
-                            geradorAssembly.gerarInstrucao("ADD", ultimoOperando);
+                            geradorAssembly.gerarInstrucao("ADD", idAtual);
                         }
                     } else if (operador.equals("-")) {
+                        operacaoSimbolo = "-";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
-                            geradorAssembly.gerarInstrucao("SUBI", ultimoOperando);
+                            geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
+                            geradorAssembly.gerarInstrucao("STO", idAtual);
                         } else if (ultimoOperandoTipo == Constants.t_ID) {
-                            geradorAssembly.gerarInstrucao("SUB", ultimoOperando);
+                            geradorAssembly.gerarInstrucao("SUB", idAtual);
                         }
                     }
                     // Limpa após uso
@@ -446,6 +451,19 @@ case 7:
                     valorAtualString = valor;
                 }
                 break;
+            case 50:
+                if (token != null) {
+                    if(operacaoSimbolo.equals("+")) {
+                        if(token.getId() == Constants.t_INTEIRO) {
+                            geradorAssembly.gerarInstrucao("ADDI", token.getLexeme());
+                            geradorAssembly.gerarInstrucao("STO", idAtual);
+                        } else if (token.getId() == Constants.t_ID) {
+                            geradorAssembly.gerarInstrucao("ADD", token.getLexeme());
+                            geradorAssembly.gerarInstrucao("STO", idAtual);
+                        }
+                    }
+                }
+              break;
 
             default:
                 break;
