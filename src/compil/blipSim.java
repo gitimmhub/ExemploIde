@@ -14,13 +14,16 @@ public class blipSim {
         codigo = new StringBuilder();
     }
 
-    // Gera o .data com base na tabela de símbolos
-    public void gerarDataSection(List<Simbolo> simbolos) {
-        for (Simbolo simbolo : simbolos) {
-            if (!simbolo.getFlagFuncao()) { // Ignora funções
-                dataSection.append(simbolo.getId()).append(" : 0\n");
-            }
+public void gerarDataSection(List<Simbolo> simbolos) {
+    for (Simbolo simbolo : simbolos) {
+        if (!simbolo.getFlagFuncao() && !dataSection.toString().contains(simbolo.getId() + " :")) {
+            dataSection.append(simbolo.getId()).append(" : 0\n");
         }
+    }
+}
+
+    public void adicionarItemData(String id, String valor) {
+        dataSection.append(id).append(" : ").append(valor).append("\n");
     }
 
     // Gera código para entrada de dados

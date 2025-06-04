@@ -11,6 +11,7 @@ public class Semantico implements Constants {
     private String tipoAtual = null;
     private boolean isVetor = false;
     private int tamanhoVetor = 0;
+    private int msgnumero = 0;
     private Integer escopoAtual = 0;
     private String idAtual = null;
     private Integer valorAtualInt = null;
@@ -263,34 +264,33 @@ public class Semantico implements Constants {
                 break;
 
             case 18:
-                // Saída de dados: imprime string ou valor de variável
                 if (token != null) {
                     String valor = token.getLexeme();
+                    System.out.println("Id Token: " + token.getId());
                     if(valorAtualString != null) {
-                        valor = valorAtualString; // Usa o valor da string atual
+                        valor = valorAtualString;
                     } else if (valorAtualInt != null) {
-                        geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString()); // Usa o valor inteiro atual
-                        geradorAssembly.gerarInstrucao("STO", "$out_port");
-                        valorAtualInt = null; // Limpa após uso
+                        geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
+                        valorAtualInt = null;
                     } else if (valorAtualDouble != null) {
-                        valor = String.valueOf(valorAtualDouble); // Usa o valor decimal atual
+                        valor = String.valueOf(valorAtualDouble);
                     }
-                    // Se for string literal (entre aspas)
                     if (valor.startsWith("\"") && valor.endsWith("\"")) {
-                        // Imprime string diretamente
-                        geradorAssembly.gerarInstrucao("LDI", valor);
-                        geradorAssembly.gerarInstrucao("STO", "$out_port");
-                        valorAtualString = null; // Limpa após uso
+                        geradorAssembly.adicionarItemData("msg" + msgnumero, valor);
+                        geradorAssembly.gerarInstrucao("LDI", "msg" + msgnumero);
+                        msgnumero++;
+                        valorAtualString = null; 
                     } else if (token.getId() == Constants.t_ID) {
-                        // Se for variável, carrega valor e imprime
                         Simbolo simboloSaida = buscarSimbolo(valor);
                         if (simboloSaida != null) {
                             geradorAssembly.gerarInstrucao("LD", simboloSaida.getId());
-                            geradorAssembly.gerarInstrucao("STO", "$out_port");
                         } else {
                             throw new SemanticError("Variável '" + valor + "' usada sem declaração.");
                         }
                     }
+
+                    
+                    geradorAssembly.gerarInstrucao("STO", "$out_port");
                 }
                 break;
 
