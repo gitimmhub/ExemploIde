@@ -1,18 +1,3 @@
-#Options
-GenerateScanner = true
-GenerateParser = true
-Language = Java
-ScannerName = Lexico
-ParserName = Sintatico
-SemanticName = Semantico
-Package = gals
-ScannerCaseSensitive = true
-ScannerTable = Compact
-Input = String
-Parser = SLR
-#RegularDefinitions
-
-#Tokens
 :[\n\s\t\r]*
 COMENTARIO: (/)(/).*
 COMENTARIO_BLOCO: (/)\* ([^\*] | \*+ [^/] )* \* + (/)
@@ -86,74 +71,11 @@ BOOLEAN = ID: "bool"
 
 
 
-#NonTerminals
-<lista_comandos>
-<auxcomando>
-<comando>
-<funcao>
-<funcao_tipo>
-<param>
-<paramaux>
-<virgula>
-<funcao_invoca>
-<invoca_param>
-<return>
-<entrada>
-<saida>
-<tipagem_saida>
-<proxsaida>
-<decl_var>
-<lista_variaveis>
-<lista_variaveis_aux>
-<variavel_init>
-<indexdeclara_opcional>
-<indexdeclara>
-<init_opcional>
-<decl_var_simples>
-<variavelsimplesaux>
-<ultimoaux>
-<tipo>
-<tipovar>
-<tipo_vetor_opcional>
-<id_usado>
-<id_declara>
-<index>
-<if>
-<auxif>
-<else_if_seq>
-<else_if>
-<else>
-<while>
-<auxwhile>
-<do_while>
-<for>
-<bloco>
-<lista_instrucoes_opcional>
-<retorno_opcional>
-<instrucao_simples>
-<atribuicao>
-<ver_fim>
-<exp1>
-<exp2>
-<exp3>
-<exp4>
-<exp5>
-<exp6>
-<exp7>
-<exp8>
-<exp9>
-<exp10>
-<exp11>
-<lista_exp>
-<lista_exp_aux>
-<op_rel>
-<op_adc>
-<op_neg>
-<op_bitwise>
-<op_arit_baixa>
-<op_arit_alta>
-<fim_linha>
-#Grammar
+
+
+
+
+
 <lista_comandos> ::= <comando> <auxcomando>;
 <auxcomando> ::= <lista_comandos> | î;
 
@@ -327,3 +249,5 @@ BOOLEAN = ID: "bool"
 <op_arit_alta> ::= EXPOENTE | MULTIPLICACAO | DIVISAO | RESTO;
 
 <fim_linha> ::= PONTO_VIRGULA;
+
+
