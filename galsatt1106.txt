@@ -1,0 +1,256 @@
+:[\n\s\t\r]*
+COMENTARIO: (/)(/).*
+COMENTARIO_BLOCO: (/)\* ([^\*] | \*+ [^/] )* \* + (/)
+
+INTEIRO: [0-9]*
+DECIMAL: [0-9],[0-9]
+CARACTERE: '[^']'
+TEXTO: \"([^\"]*)\"
+
+ENTRADA: "input::"
+SAIDA: "out::"
+RETORNO: "return"
+
+ENTAO: "else if"
+SE: "if"
+SENAO: "else"
+ENQUANTO: "while"
+FACA: "do"
+RETORNO: "return"
+PARA: "for"
+CONSTANTE: "const"
+VARIAVEL: "var"
+FUNCAO: "function"
+
+PONTO: "."
+PONTO_VIRGULA: ";"
+DOIS_PONTOS: ":"
+COLCHETE_ABRE: "["
+COLCHETE_FECHA: "]"
+PARENTESES_ABRE: "("
+PARENTESES_FECHA: ")"
+CHAVES_ABRE: "{"
+CHAVES_FECHA: "}"
+VIRGULA: ","
+RECEBE: "="
+
+EXPOENTE: "**"
+SOMA: "+"
+SUBTRACAO: "-"
+MULTIPLICACAO: "*"
+DIVISAO: "/"
+RESTO: "%"
+
+IGUAL: "=="
+MAIOR: ">"
+MENOR: "<"
+MAIOR_IGUAL: ">="
+MENOR_IGUAL: "<="
+DIFERENTE: "!="
+
+E: "&&"
+OU: "||"
+NAO: "!"
+
+DESLOCAMENTO_DIREITA: ">>"
+DESLOCAMENTO_ESQUERDA: "<<"
+E_BAB: "&"
+OU_BAB: "|"
+OU_EXCLUSIVO: "^"
+COMPLEMENTO: "~"
+
+
+ID: [a-zA-Z0-9_\-]*
+
+CHAR = ID: "char"
+INT = ID: "int"
+FLOAT = ID: "float"
+STRING = ID: "string"
+VOID = ID: "void"
+BOOLEAN = ID: "bool"
+
+
+
+
+<lista_comandos> ::= <comando> <auxcomando>;
+<auxcomando> ::= <lista_comandos> | î;
+
+// Comando
+<comando> ::= <funcao> #22 
+            | <entrada> #17 
+            | <saida> #18 
+            | <funcao_invoca> #40 
+            | <if> #30 
+            | <for> #35 
+            | <do_while> #39 
+            | <while> #38 
+            | <decl_var>
+            | <atribuicao> #21;
+
+// FUNÇÃO
+<funcao> ::= FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE <param> #24 PARENTESES_FECHA <bloco> #25 
+          | FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE PARENTESES_FECHA <bloco> #25;
+
+<funcao_tipo> ::= CHAR | INT | FLOAT | STRING | VOID | BOOLEAN;
+
+<param> ::= <id_declara> <paramaux>
+         | <decl_var_simples>;
+
+<paramaux> ::= <virgula> <param> | î;
+<virgula> ::= VIRGULA;
+
+// INVOCACAO DE FUNÇÃO
+<funcao_invoca> ::= <id_usado> PARENTESES_ABRE <invoca_param> #41 PARENTESES_FECHA <fim_linha>
+                 | <id_usado> PARENTESES_ABRE PARENTESES_FECHA <fim_linha>;
+
+<invoca_param> ::= <exp11> 
+                 | <exp11> <virgula> <invoca_param> #41;
+
+// RETORNO
+<return> ::= RETORNO <exp1> PONTO_VIRGULA;
+
+// ENTRADA / SAÍDA
+<entrada> ::= ENTRADA <id_usado> <fim_linha>;
+<saida> ::= SAIDA <exp1> <tipagem_saida> #19;
+
+<tipagem_saida> ::= DOIS_PONTOS DOIS_PONTOS <proxsaida> #20 
+                 | <fim_linha>;
+
+<proxsaida> ::= <exp1> <tipagem_saida> #19;
+
+// DECLARAÇÃO DE VARIÁVEL
+<decl_var> ::= <tipo> <lista_variaveis> #5 <fim_linha>;
+
+<lista_variaveis> ::= <variavel_init> #7 <lista_variaveis_aux> #8;
+
+<lista_variaveis_aux> ::= VIRGULA <variavel_init> <lista_variaveis_aux> 
+                        | î;
+
+<variavel_init> ::= <id_declara> <indexdeclara_opcional> #2 <init_valor_opcional> #9;
+
+<indexdeclara_opcional> ::= <indexdeclara> | î;
+<indexdeclara> ::= COLCHETE_ABRE INTEIRO #5 COLCHETE_FECHA;
+
+<init_valor_opcional> ::= RECEBE #42 <exp1>
+                        | î;
+
+// Declaração de variável simples
+<decl_var_simples> ::= <tipo> <id_declara> #2 <variavelsimplesaux>;
+
+<variavelsimplesaux> ::= RECEBE #42 <exp1> <ultimoaux> 
+                       | <ultimoaux>;
+
+<ultimoaux> ::= <virgula> <decl_var_simples> #37 
+              | î;
+
+// TIPOS
+<tipo> ::= <tipovar> <tipo_vetor_opcional>;
+
+<tipovar> ::= INT #3 | FLOAT #3 | CHAR #3 | STRING #3;
+
+<tipo_vetor_opcional> ::= COLCHETE_ABRE #4 COLCHETE_FECHA | î;
+
+// ID e complementos
+<id_usado> ::= ID #1;
+<id_declara> ::= ID #1;
+
+<index> ::= COLCHETE_ABRE INTEIRO COLCHETE_FECHA;
+
+// IF, ELSE IF, ELSE
+<if> ::= SE PARENTESES_ABRE <exp1> PARENTESES_FECHA <bloco> #25 <auxif> #31;
+
+<auxif> ::= <else_if_seq> #32 <else> #34 
+          | <else_if_seq> #32 
+          | <else> #34 
+          | î;
+
+<else_if_seq> ::= <else_if> #33 
+                | <else_if> #33 <else_if_seq> #32;
+
+<else_if> ::= ENTAO PARENTESES_ABRE <exp1> PARENTESES_FECHA <bloco> #25;
+
+<else> ::= SENAO <bloco> #25;
+
+// WHILE / DO-WHILE
+<while> ::= ENQUANTO PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA <bloco> #25;
+
+<auxwhile> ::= <exp1> 
+             | <decl_var_simples> #37;
+
+<do_while> ::= FACA <bloco> #25 ENQUANTO PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA <fim_linha>;
+
+// FOR
+<for> ::= PARA PARENTESES_ABRE <auxwhile> #36 PONTO_VIRGULA <exp1> PONTO_VIRGULA <exp1> PARENTESES_FECHA <bloco> #25;
+
+// BLOCO DE COMANDOS
+<bloco> ::= CHAVES_ABRE #43 <lista_instrucoes_opcional> #26 <retorno_opcional> #29 #44 CHAVES_FECHA;
+
+<lista_instrucoes_opcional> ::= <comando> #27 <lista_instrucoes_opcional> #26 
+                              | î;
+
+<retorno_opcional> ::= <return> #29 
+                     | î;
+
+<instrucao_simples> ::= <atribuicao> #21
+                      | <ver_fim>;
+
+<atribuicao> ::= <id_usado> RECEBE #42 <exp1> <fim_linha>
+               | <id_usado> <index> RECEBE #42 <exp1> <fim_linha>;
+
+<ver_fim> ::= <exp1> <fim_linha>;
+
+// EXPRESSÕES
+<exp1> ::= <exp2> 
+        | <exp2> E <exp1>;
+
+<exp2> ::= <exp3> 
+        | <exp3> OU_BAB <exp2>;
+
+<exp3> ::= <exp4> 
+        | <exp4> OU_EXCLUSIVO <exp3>;
+
+<exp4> ::= <exp5> 
+        | <exp5> E_BAB <exp4>;
+
+<exp5> ::= <exp6> 
+        | <exp6> <op_rel> #10 <exp5>;
+
+<exp6> ::= <exp7> 
+        | <exp7> <op_bitwise> #11 <exp6>;
+
+<exp7> ::= <exp8> 
+        | <exp8> <op_arit_baixa> #12 <exp7>;
+
+<exp8> ::= <exp9> 
+        | <exp9> <op_arit_alta> #13 <exp8>;
+
+<exp9> ::= <exp10> 
+        | <exp10> <op_adc> #14 <exp9>;
+
+<exp10> ::= <exp11> 
+         | <op_neg> #15 <exp10>;
+
+// EXPRESSÃO FINAL – INCLUINDO LITERAL DE VETOR
+<exp11> ::= INTEIRO 
+         | DECIMAL 
+         | CARACTERE 
+         | TEXTO 
+         | <id_usado> 
+         | <id_usado> <index> #16 
+         | PARENTESES_ABRE <ver_fim> PARENTESES_FECHA
+         | COLCHETE_ABRE <lista_exp> COLCHETE_FECHA #45;
+
+<lista_exp> ::= <exp1> <lista_exp_aux>;
+
+<lista_exp_aux> ::= VIRGULA <exp1> <lista_exp_aux> 
+                  | î;
+
+// OPERADORES
+<op_rel> ::= MAIOR | MENOR | MAIOR_IGUAL | MENOR_IGUAL | IGUAL | DIFERENTE;
+<op_adc> ::= PONTO;
+<op_neg> ::= COMPLEMENTO | NAO;
+<op_bitwise> ::= DESLOCAMENTO_ESQUERDA | DESLOCAMENTO_DIREITA;
+<op_arit_baixa> ::= SOMA | SUBTRACAO;
+<op_arit_alta> ::= EXPOENTE | MULTIPLICACAO | DIVISAO | RESTO;
+
+<fim_linha> ::= PONTO_VIRGULA;
