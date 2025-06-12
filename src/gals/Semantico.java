@@ -13,6 +13,7 @@ public class Semantico implements Constants {
     private int tamanhoVetor = 0;
     private Integer escopoAtual = 0;
     private String idAtual = null;
+    private String idAtribuicao = null;
     private Integer valorAtualInt = null;
     private Double valorAtualDouble = null;
     private String valorAtualString = null;
@@ -86,12 +87,14 @@ public class Semantico implements Constants {
                     break;
 
                 String chave = idAtual + "#" + escopoAtual;
+                idAtribuicao = idAtual; // Salva o identificador da variável a ser atribuída
 
                 // Verifique se o nome já foi usado como parâmetro
                 if (symbolTable.containsKey(chave)) {
                     throw new SemanticError("Variável já declarada neste escopo: " + idAtual);
                 }
 
+                // Cria o símbolo e marca como inicializada se necessário
                 Simbolo simbolo = new Simbolo(
                         tipoAtual,
                         idAtual,
@@ -102,27 +105,39 @@ public class Semantico implements Constants {
                         inicializarAgora,
                         false);
 
-                // Salve o tamanho do vetor se for vetor
-                // if (isVetor) {
-                //     simbolo.setTamanhoVetor(tamanhoVetor > 0 ? tamanhoVetor : 1); // padrão 1 se não informado
-                // }
+                // Se houver inicialização, marque como inicializada e gere o assembly correto
+                if (inicializarAgora) {
+                    simbolo.setFlagInicializada(true);
+                    simbolo.setFlagUsada(true);
+                    // Gera o código de atribuição
+                    if (token != null) {
+                        if (token.getId() == Constants.t_INTEIRO) {
+                            geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
+                        } else if (token.getId() == Constants.t_DECIMAL || token.getId() == Constants.t_FLOAT) {
+                            Double valorDouble = Double.parseDouble(token.getLexeme().replace(',', '.'));
+                            int bits = Float.floatToIntBits(valorDouble.floatValue());
+                            String valorBinario = Integer.toBinaryString(bits);
+                            geradorAssembly.gerarInstrucao("LDI", valorBinario);
+                        } else if (token.getLexeme().startsWith("\"") && token.getLexeme().endsWith("\"")) {
+                            geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
+                        } else if (token.getId() == Constants.t_ID) {
+                            geradorAssembly.gerarInstrucao("LD", token.getLexeme());
+                        }
+                    }
+                    geradorAssembly.gerarInstrucao("STO", idAtribuicao); // Use idAtribuicao aqui!
+                }
 
                 symbolTable.put(chave, simbolo);
 
                 // Gera a declaração no .data
                 geradorAssembly.gerarDataSection(getTabelaSimbolos().getListSimbolos());
 
-                // Verifica se há inicialização
-                if (inicializarAgora) {
-                    String valor = token.getLexeme(); // Captura o valor do token
-                    geradorAssembly.gerarInstrucao("STO", idAtual); // Gera o código de atribuição
-                }
-
                 idAtual = null;
+                idAtribuicao = null; // Limpa após uso
                 inicializarAgora = false;
                 tipoAtual = null;
                 isVetor = false;
-                tamanhoVetor = 0; // <-- Limpe o tamanho do vetor após uso
+                tamanhoVetor = 0;
                 break;
                 
             case 3:
@@ -159,8 +174,8 @@ case 7:
         if (inicializarAgora) {
             if (simboloUso != null) {
                 simboloUso.setFlagInicializada(true);
-                geradorAssembly.gerarInstrucao("LD", "$in_port");
-                geradorAssembly.gerarInstrucao("STO", simboloUso.getId());
+                // geradorAssembly.gerarInstrucao("LD", "$in_port");
+                // geradorAssembly.gerarInstrucao("STO", simboloUso.getId());
             } else {
                 throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
             }
