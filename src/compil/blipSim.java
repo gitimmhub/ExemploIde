@@ -1,5 +1,7 @@
 package compil;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class blipSim {
@@ -16,10 +18,12 @@ public class blipSim {
 
     // Gera o .data com base na tabela de símbolos
     public void gerarDataSection(List<Simbolo> simbolos) {
-        java.util.HashSet<String> idsAdicionados = new java.util.HashSet<>();
+        HashSet<String> idsAdicionados = new HashSet<>();
         for (Simbolo simbolo : simbolos) {
-            if (!simbolo.getFlagFuncao() && idsAdicionados.add(simbolo.getId())) { // Ignora funções e repetidos
-                dataSection.append(simbolo.getId()).append(" : 0\n");
+            String id = simbolo.getId().trim();
+            String chave = id + "_" + simbolo.getEscopo(); // chave única por escopo
+            if (!simbolo.getFlagFuncao() && idsAdicionados.add(chave)) {
+                dataSection.append(id).append(" : 0\n");
             }
         }
     }
