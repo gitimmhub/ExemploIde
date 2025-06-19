@@ -19,7 +19,11 @@ public class MainWindow extends javax.swing.JFrame {
      */
     public MainWindow() {
         initComponents();
-        sourceInput.setText("function int main() {\n    \n}");
+        sourceInput.setText("function int main() {\r\n" + //
+                        "    int a = 1;\r\n" + //
+                        "    int b = 2;\r\n" + //
+                        "    int c = a + b + 2;\r\n" + //
+                        "}");
     }
 
     @SuppressWarnings("unchecked")

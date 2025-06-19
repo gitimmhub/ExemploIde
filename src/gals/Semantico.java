@@ -22,6 +22,7 @@ public class Semantico implements Constants {
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
+    private boolean aguardandoOperador = false;
 
     private blipSim geradorAssembly = new blipSim(); // Instância do GeradorAssembly
 
@@ -83,8 +84,12 @@ public class Semantico implements Constants {
 
 
             case 2: // Declaração de variável
-                if (idAtual == null)
-                    break;
+                // Atualiza o idAtual com o nome do identificador recebido
+                if (token != null && token.getLexeme() != null && !token.getLexeme().isEmpty()) {
+                    idAtual = token.getLexeme();
+                } else {
+                    throw new SemanticError("Identificador não pode ser nulo ou vazio.");
+                }
 
                 String chave = idAtual + "#" + escopoAtual;
                 idAtribuicao = idAtual; // Salva o identificador da variável a ser atribuída
@@ -112,6 +117,7 @@ public class Semantico implements Constants {
                     // Gera o código de atribuição
                     if (token != null) {
                         if (token.getId() == Constants.t_INTEIRO) {
+                            System.out.println(token.getLexeme());
                             geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
                         } else if (token.getId() == Constants.t_DECIMAL || token.getId() == Constants.t_FLOAT) {
                             Double valorDouble = Double.parseDouble(token.getLexeme().replace(',', '.'));
@@ -124,7 +130,7 @@ public class Semantico implements Constants {
                             geradorAssembly.gerarInstrucao("LD", token.getLexeme());
                         }
                     }
-                    geradorAssembly.gerarInstrucao("STO", idAtribuicao); // Use idAtribuicao aqui!
+
                 }
 
                 symbolTable.put(chave, simbolo);
@@ -132,12 +138,7 @@ public class Semantico implements Constants {
                 // Gera a declaração no .data
                 geradorAssembly.gerarDataSection(getTabelaSimbolos().getListSimbolos());
 
-                idAtual = null;
-                idAtribuicao = null; // Limpa após uso
-                inicializarAgora = false;
-                tipoAtual = null;
-                isVetor = false;
-                tamanhoVetor = 0;
+
                 break;
                 
             case 3:
@@ -165,41 +166,58 @@ public class Semantico implements Constants {
             case 6:
                 break;
 
-case 7:
-    if (token.getId() == Constants.t_ID) {
-        ultimoOperando = token.getLexeme();
-        ultimoOperandoTipo = Constants.t_ID;
-        Simbolo simboloUso = buscarSimbolo(token.getLexeme());
+            case 7:
 
-        if (inicializarAgora) {
-            if (simboloUso != null) {
-                simboloUso.setFlagInicializada(true);
-                // geradorAssembly.gerarInstrucao("LD", "$in_port");
-                // geradorAssembly.gerarInstrucao("STO", simboloUso.getId());
-            } else {
-                throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
-            }
-        }
-        if (simboloUso != null) {
-            simboloUso.setFlagUsada(true);
-            if (!Boolean.TRUE.equals(simboloUso.getFlagInicializada())) {
-                throw new SemanticError(
-                        "Variável '" + simboloUso.getId() + "' usada sem estar inicializada.");
-            }
-            // Só gera LD se for o primeiro operando da expressão
-            if (token.getId() == Constants.t_ID && operadorAtual == null) {
-                geradorAssembly.gerarInstrucao("LD", simboloUso.getId());
-            }
-        } else {
-            throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
-        }
-    }
-    break;
+
+                if (token.getId() == Constants.t_ID) {
+                    ultimoOperando = token.getLexeme();
+                    ultimoOperandoTipo = Constants.t_ID;
+                    Simbolo simboloUso = buscarSimbolo(token.getLexeme());
+
+                    if (inicializarAgora) {
+                        if (simboloUso != null) {
+                            simboloUso.setFlagInicializada(true);
+                            // geradorAssembly.gerarInstrucao("LD", "$in_port");
+                            // geradorAssembly.gerarInstrucao("STO", simboloUso.getId());
+                        } else {
+                            throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
+                        }
+                    }
+                    if (simboloUso != null) {
+                        simboloUso.setFlagUsada(true);
+                        if (!Boolean.TRUE.equals(simboloUso.getFlagInicializada())) {
+                            throw new SemanticError(
+                                    "Variável '" + simboloUso.getId() + "' usada sem estar inicializada.");
+                        }
+                        // Só gera LD se for o primeiro operando da expressão
+                        if (token.getId() == Constants.t_ID && operadorAtual == null) {
+                            geradorAssembly.gerarInstrucao("LD", simboloUso.getId());
+                        }
+                    } else {
+                        throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
+                    }
+                }
+                                System.out.println("CHEGOU AQUI");
+                geradorAssembly.gerarInstrucao("STO", idAtual);
+
+                idAtual = null; // Limpa após uso
+                idAtribuicao = null; // Limpa após uso
+                inicializarAgora = false;
+                tipoAtual = null;
+                isVetor = false;
+                tamanhoVetor = 0;
+                break;
 
             case 8:
                 break;
 
             case 9:
+                // if (idAtual != null) {
+                //     System.out.println("Inicializando variável: " + idAtual);
+                //     System.out.println("CHEGOU AQUI");
+                //     geradorAssembly.gerarInstrucao("STO", idAtual);
+                //     inicializarAgora = false;
+                // }
                 if (token != null) {
                     ultimoOperando = token.getLexeme();
                     ultimoOperandoTipo = token.getId();
@@ -228,25 +246,25 @@ case 7:
                 break;
 
             case 12:
+                System.out.println("chegou aqui papai");
                 // Aqui, token é o operador ("+" ou "-")
                 if (token != null && ultimoOperando != null) {
                     String operador = token.getLexeme();
                     if (operador.equals("+")) {
+                        System.out.println("operador é +");
                         operacaoSimbolo = "+";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
-                            
-                            geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
-                            geradorAssembly.gerarInstrucao("STO", idAtual);
+                            geradorAssembly.gerarInstrucao("ADDI", ultimoOperando);
                         } else if (ultimoOperandoTipo == Constants.t_ID) {
-                            geradorAssembly.gerarInstrucao("ADD", idAtual);
+                            geradorAssembly.gerarInstrucao("ADD", ultimoOperando);
                         }
                     } else if (operador.equals("-")) {
+                        System.out.println("operador é -");
                         operacaoSimbolo = "-";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
-                            geradorAssembly.gerarInstrucao("LDI", valorAtualInt.toString());
-                            geradorAssembly.gerarInstrucao("STO", idAtual);
+                            geradorAssembly.gerarInstrucao("SUBI", ultimoOperando);
                         } else if (ultimoOperandoTipo == Constants.t_ID) {
-                            geradorAssembly.gerarInstrucao("SUB", idAtual);
+                            geradorAssembly.gerarInstrucao("SUB", ultimoOperando);
                         }
                     }
                     // Limpa após uso
