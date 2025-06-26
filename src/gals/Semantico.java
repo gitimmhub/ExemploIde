@@ -5,6 +5,7 @@ import compil.Simbolo;
 import compil.blipSim;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class Semantico implements Constants {
     private Map<String, Simbolo> symbolTable = new HashMap<>();
@@ -21,14 +22,44 @@ public class Semantico implements Constants {
     private int escopoMax = 0;
     private Pilha pilhaEscopo = new Pilha();
     private boolean inicializarAgora = false;
-    private boolean isFuncaoDeclarando = false; // <-- Adicione esta linha
+    private boolean isFuncaoDeclarando = false;
     private boolean aguardandoOperador = false;
 
-    private blipSim geradorAssembly = new blipSim(); // Instância do GeradorAssembly
+    private Stack<String> labelStack = new Stack<>();
+    private int labelCounter = 0;
+    private String oprel = null;
+
+    private blipSim geradorAssembly = new blipSim();
 
     private String ultimoOperando = null;
     private int ultimoOperandoTipo = -1;
     private String operadorAtual = null;
+
+    private int tempCounter = 0;
+
+    private String temp_esq = null;
+    private String temp_dir = null;
+
+    private String newTemp() {
+        tempCounter++;
+        return "temp" + tempCounter;
+    }
+
+    private String newRotulo() {
+        labelCounter++;
+        return "R" + labelCounter;
+    }
+
+    private void pushRotulo(String label) {
+        labelStack.push(label);
+    }
+
+    private String popRotulo() {
+        if (!labelStack.isEmpty()) {
+            return labelStack.pop();
+        }
+        return null;
+    }
 
     public compil.TabelaSimbolos getTabelaSimbolos() {
         compil.TabelaSimbolos tabela = new compil.TabelaSimbolos();
@@ -117,7 +148,6 @@ public class Semantico implements Constants {
                     // Gera o código de atribuição
                     if (token != null) {
                         if (token.getId() == Constants.t_INTEIRO) {
-                            System.out.println(token.getLexeme());
                             geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
                         } else if (token.getId() == Constants.t_DECIMAL || token.getId() == Constants.t_FLOAT) {
                             Double valorDouble = Double.parseDouble(token.getLexeme().replace(',', '.'));
@@ -158,7 +188,6 @@ public class Semantico implements Constants {
                 try {
                     tamanhoVetor = Integer.parseInt(token.getLexeme());  // ex: "10" → 10
                 } catch (NumberFormatException e) {
-                    // System.err.println("Erro: tamanho do vetor inválido: " + token.getLexeme());
                     tamanhoVetor = 1; // padrão
                 }
                 break;
@@ -167,8 +196,6 @@ public class Semantico implements Constants {
                 break;
 
             case 7:
-
-
                 if (token.getId() == Constants.t_ID) {
                     ultimoOperando = token.getLexeme();
                     ultimoOperandoTipo = Constants.t_ID;
@@ -197,7 +224,6 @@ public class Semantico implements Constants {
                         throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                     }
                 }
-                                System.out.println("CHEGOU AQUI");
                 geradorAssembly.gerarInstrucao("STO", idAtual);
 
                 idAtual = null; // Limpa após uso
@@ -240,18 +266,23 @@ public class Semantico implements Constants {
                 break;
 
             case 10:
+                if(token != null) {
+                    oprel = token.getLexeme();
+                    temp_esq = newTemp();
+                    geradorAssembly.addData(temp_esq, "0"); // Inicializa o temporário com 0
+                    geradorAssembly.gerarInstrucao("STO", temp_esq);
+                    
+                }
                 break;
 
             case 11:
                 break;
 
             case 12:
-                System.out.println("chegou aqui papai");
                 // Aqui, token é o operador ("+" ou "-")
                 if (token != null && ultimoOperando != null) {
                     String operador = token.getLexeme();
                     if (operador.equals("+")) {
-                        System.out.println("operador é +");
                         operacaoSimbolo = "+";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
                             geradorAssembly.gerarInstrucao("ADDI", ultimoOperando);
@@ -259,7 +290,6 @@ public class Semantico implements Constants {
                             geradorAssembly.gerarInstrucao("ADD", ultimoOperando);
                         }
                     } else if (operador.equals("-")) {
-                        System.out.println("operador é -");
                         operacaoSimbolo = "-";
                         if (ultimoOperandoTipo == Constants.t_INTEIRO) {
                             geradorAssembly.gerarInstrucao("SUBI", ultimoOperando);
@@ -331,7 +361,16 @@ public class Semantico implements Constants {
                 }
                 break;
 
-            case 19:
+            case 19: //output
+
+                if(token != null) {
+                    if(idAtual != null) {
+                        geradorAssembly.gerarInstrucao("LD", idAtual);
+                        geradorAssembly.gerarInstrucao("STO", "$out_port");
+                        idAtual = null; // Limpa após uso
+                    }
+                }
+
                 break;
 
             case 20:
@@ -386,6 +425,14 @@ public class Semantico implements Constants {
                 break;
 
             case 25:
+                if(token != null) {
+                    if(oprel != null) {
+                        String rotulo = popRotulo();
+                        if (rotulo != null) {
+                            geradorAssembly.gerarInstrucao("ROT", rotulo);
+                        }
+                    }
+                }
                 break;
 
             case 26:
@@ -439,14 +486,15 @@ public class Semantico implements Constants {
                 break;
 
             case 42:
-                if (token != null && token.getId() == Constants.t_ID) {
-                    String chaveAttr = token.getLexeme() + "#" + escopoAtual;
+                if (token != null) {
+                    System.out.println(idAtribuicao);
+                    String chaveAttr = idAtribuicao + "#" + escopoAtual;
                     Simbolo simboloAttr = symbolTable.get(chaveAttr);
                     if (simboloAttr != null) {
                         simboloAttr.setFlagInicializada(true);
-                        simboloAttr.setFlagUsada(true);
-                        geradorAssembly.gerarInstrucao("LD", simboloAttr.getId());
-                        geradorAssembly.gerarInstrucao("STO", "$out_port");
+                        // simboloAttr.setFlagUsada(true);
+                        // geradorAssembly.gerarInstrucao("LD", simboloAttr.getId());
+                        // geradorAssembly.gerarInstrucao("STO", "$out_port");
                     }
                 }
 
@@ -497,6 +545,44 @@ public class Semantico implements Constants {
                     }
                 }
               break;
+
+            case 61:
+                break;
+            
+            case 62:
+                if(token != null) {
+                    temp_dir = newTemp();
+                    geradorAssembly.addData(temp_dir, "0"); // Inicializa o temporário com 0
+                    if(token.getId() == Constants.t_ID) {
+                        geradorAssembly.gerarInstrucao("LD", token.getLexeme());
+                    } else {
+                        geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
+                    }
+                    geradorAssembly.gerarInstrucao("STO", temp_dir);
+                    geradorAssembly.gerarInstrucao("LD", temp_esq);
+                    geradorAssembly.gerarInstrucao("SUB", temp_dir);
+                }
+                break;
+            
+            case 67:
+            String rotIf = newRotulo();
+            pushRotulo(rotIf);
+               if (rotIf != null) {
+                    if (oprel.equals("<")) { // if (A < B) then jump if (A >= B)
+                        geradorAssembly.gerarInstrucao("BGE", rotIf);
+                    } else if (oprel.equals(">")) { // if (A > B) then jump if (A <= B)
+                        geradorAssembly.gerarInstrucao("BLE", rotIf);
+                    } else if (oprel.equals("==")) { // if (A == B) then jump if (A != B)
+                        geradorAssembly.gerarInstrucao("BNE", rotIf);
+                    } else if (oprel.equals("!=")) { // if (A != B) then jump if (A == B)
+                        geradorAssembly.gerarInstrucao("BEQ", rotIf);
+                    } else if (oprel.equals("<=")) { // if (A <= B) then jump if (A > B)
+                        geradorAssembly.gerarInstrucao("BGT", rotIf);
+                    } else if (oprel.equals(">=")) { // if (A >= B) then jump if (A < B)
+                        geradorAssembly.gerarInstrucao("BLT", rotIf);
+                    }
+                }
+                break;
 
             default:
                 break;

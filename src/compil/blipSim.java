@@ -80,7 +80,15 @@ public class blipSim {
     }
 
     public void gerarInstrucao(String instrucao, String operando) {
+        if(instrucao.equals("ROT")) {
+            codigo.append(operando).append(":\n");
+            return;
+        }
         codigo.append(instrucao).append(" ").append(operando).append("\n");
+    }
+
+    public void addData(String id, String valor) {
+        dataSection.append(id).append(" : ").append(valor).append("\n");
     }
 
     // Gera o código completo

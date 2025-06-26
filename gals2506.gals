@@ -83,9 +83,6 @@ FLOAT = ID: "float"
 STRING = ID: "string"
 VOID = ID: "void"
 BOOLEAN = ID: "bool"
-
-
-
 #NonTerminals
 <lista_comandos>
 <auxcomando>
@@ -108,7 +105,7 @@ BOOLEAN = ID: "bool"
 <variavel_init>
 <indexdeclara_opcional>
 <indexdeclara>
-<init_opcional>
+<init_valor_opcional>
 <decl_var_simples>
 <variavelsimplesaux>
 <ultimoaux>
@@ -154,6 +151,7 @@ BOOLEAN = ID: "bool"
 <op_arit_alta>
 <fim_linha>
 #Grammar
+
 <lista_comandos> ::= <comando> <auxcomando>;
 <auxcomando> ::= <lista_comandos> | î;
 
@@ -166,12 +164,12 @@ BOOLEAN = ID: "bool"
             | <for> #35 
             | <do_while> #39 
             | <while> #38 
-            | <decl_var> #2 
+            | <decl_var>
             | <atribuicao> #21;
 
 // FUNÇÃO
-<funcao> ::= FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE <param> #24 PARENTESES_FECHA <bloco> #25 
-          | FUNCAO <funcao_tipo> #23 <id_declara> PARENTESES_ABRE PARENTESES_FECHA <bloco> #25;
+<funcao> ::= FUNCAO <funcao_tipo> #23 <id_declara> #75 PARENTESES_ABRE <param> #24 PARENTESES_FECHA #76<bloco> #25 
+          | FUNCAO <funcao_tipo> #23 <id_declara> #75 PARENTESES_ABRE PARENTESES_FECHA <bloco> #25;
 
 <funcao_tipo> ::= CHAR | INT | FLOAT | STRING | VOID | BOOLEAN;
 
@@ -182,8 +180,8 @@ BOOLEAN = ID: "bool"
 <virgula> ::= VIRGULA;
 
 // INVOCACAO DE FUNÇÃO
-<funcao_invoca> ::= <id_usado> PARENTESES_ABRE <invoca_param> #41 PARENTESES_FECHA <fim_linha>
-                 | <id_usado> PARENTESES_ABRE PARENTESES_FECHA <fim_linha>;
+<funcao_invoca> ::= <id_usado> #77 PARENTESES_ABRE <invoca_param> #41 PARENTESES_FECHA #78 <fim_linha>
+                 | <id_usado> #77 PARENTESES_ABRE PARENTESES_FECHA #78 <fim_linha>;
 
 <invoca_param> ::= <exp11> 
                  | <exp11> <virgula> <invoca_param> #41;
@@ -202,19 +200,23 @@ BOOLEAN = ID: "bool"
 
 // DECLARAÇÃO DE VARIÁVEL
 <decl_var> ::= <tipo> <lista_variaveis> #5 <fim_linha>;
+
 <lista_variaveis> ::= <variavel_init> #7 <lista_variaveis_aux> #8;
+
 <lista_variaveis_aux> ::= VIRGULA <variavel_init> <lista_variaveis_aux> 
                         | î;
 
-<variavel_init> ::= <id_declara> <indexdeclara_opcional> <init_opcional> #9;
+<variavel_init> ::= <id_declara> <indexdeclara_opcional> #2 <init_valor_opcional> #9;
+
 <indexdeclara_opcional> ::= <indexdeclara> | î;
 <indexdeclara> ::= COLCHETE_ABRE INTEIRO #5 COLCHETE_FECHA;
 
-<init_opcional> ::= RECEBE #42 <exp1>
-                 | #42 î;
+<init_valor_opcional> ::= RECEBE #42 <exp1>
+                        | î;
 
 // Declaração de variável simples
-<decl_var_simples> ::= <tipo> <id_declara> <variavelsimplesaux>;
+<decl_var_simples> ::= <tipo> <id_declara> #2 <variavelsimplesaux>;
+
 <variavelsimplesaux> ::= RECEBE #42 <exp1> <ultimoaux> 
                        | <ultimoaux>;
 
@@ -224,9 +226,9 @@ BOOLEAN = ID: "bool"
 // TIPOS
 <tipo> ::= <tipovar> <tipo_vetor_opcional>;
 
-<tipovar> ::= INT #3| FLOAT #3| CHAR #3| STRING #3;
+<tipovar> ::= INT #3 | FLOAT #3 | CHAR #3 | STRING #3;
 
-<tipo_vetor_opcional> ::= COLCHETE_ABRE #4 INTEIRO #49 COLCHETE_FECHA | î;
+<tipo_vetor_opcional> ::= COLCHETE_ABRE #4 COLCHETE_FECHA | î;
 
 // ID e complementos
 <id_usado> ::= ID #1;
@@ -235,7 +237,8 @@ BOOLEAN = ID: "bool"
 <index> ::= COLCHETE_ABRE INTEIRO COLCHETE_FECHA;
 
 // IF, ELSE IF, ELSE
-<if> ::= SE PARENTESES_ABRE <exp1> PARENTESES_FECHA <bloco> #25 <auxif> #31;
+<if> ::= SE #61 PARENTESES_ABRE <exp1>#62 PARENTESES_FECHA #67 <bloco> #25 <auxif> #31;
+
 <auxif> ::= <else_if_seq> #32 <else> #34 
           | <else_if_seq> #32 
           | <else> #34 
@@ -244,28 +247,31 @@ BOOLEAN = ID: "bool"
 <else_if_seq> ::= <else_if> #33 
                 | <else_if> #33 <else_if_seq> #32;
 
-<else_if> ::= ENTAO PARENTESES_ABRE <exp1> PARENTESES_FECHA <bloco> #25;
+<else_if> ::= ENTAO #63 PARENTESES_ABRE <exp1>#62 PARENTESES_FECHA #68 <bloco> #25;
 
-<else> ::= SENAO <bloco> #25;
+<else> ::= SENAO #64 <bloco> #25;
 
 // WHILE / DO-WHILE
-<while> ::= ENQUANTO PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA <bloco> #25;
-<auxwhile> ::= <exp1> 
+<while> ::= ENQUANTO #65 PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA #69 <bloco> #25;
+
+<auxwhile> ::= <exp1> #62
              | <decl_var_simples> #37;
 
-<do_while> ::= FACA <bloco> #25 ENQUANTO PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA <fim_linha>;
+<do_while> ::= FACA #70 <bloco> #25 ENQUANTO PARENTESES_ABRE <auxwhile> #36 PARENTESES_FECHA #71 <fim_linha>;
 
 // FOR
-<for> ::= PARA PARENTESES_ABRE <auxwhile> #36 PONTO_VIRGULA <exp1> PONTO_VIRGULA <exp1> PARENTESES_FECHA <bloco> #25;
+<for> ::= PARA #72 PARENTESES_ABRE <auxwhile> #36 PONTO_VIRGULA <exp1> #62 PONTO_VIRGULA <exp1> #73 PARENTESES_FECHA #74<bloco> #25;
 
 // BLOCO DE COMANDOS
 <bloco> ::= CHAVES_ABRE #43 <lista_instrucoes_opcional> #26 <retorno_opcional> #29 #44 CHAVES_FECHA;
+
 <lista_instrucoes_opcional> ::= <comando> #27 <lista_instrucoes_opcional> #26 
                               | î;
+
 <retorno_opcional> ::= <return> #29 
                      | î;
 
-<instrucao_simples> ::= <atribuicao> 
+<instrucao_simples> ::= <atribuicao> #21
                       | <ver_fim>;
 
 <atribuicao> ::= <id_usado> RECEBE #42 <exp1> <fim_linha>
@@ -305,16 +311,17 @@ BOOLEAN = ID: "bool"
          | <op_neg> #15 <exp10>;
 
 // EXPRESSÃO FINAL – INCLUINDO LITERAL DE VETOR
-<exp11> ::= INTEIRO #5
-         | DECIMAL #46
-         | CARACTERE #47
-         | TEXTO #48
+<exp11> ::= INTEIRO 
+         | DECIMAL 
+         | CARACTERE 
+         | TEXTO 
          | <id_usado> 
          | <id_usado> <index> #16 
          | PARENTESES_ABRE <ver_fim> PARENTESES_FECHA
          | COLCHETE_ABRE <lista_exp> COLCHETE_FECHA #45;
 
 <lista_exp> ::= <exp1> <lista_exp_aux>;
+
 <lista_exp_aux> ::= VIRGULA <exp1> <lista_exp_aux> 
                   | î;
 
