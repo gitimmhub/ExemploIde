@@ -19,7 +19,11 @@ public class MainWindow extends javax.swing.JFrame {
      */
     public MainWindow() {
         initComponents();
-        sourceInput.setText("function int main() {\n    \n}");
+        sourceInput.setText("function int main() {\r\n" + //
+                        "    int a = 1;\r\n" + //
+                        "    int b = 2;\r\n" + //
+                        "    int c = a + b + 2;\r\n" + //
+                        "}");
     }
 
     @SuppressWarnings("unchecked")
@@ -173,11 +177,27 @@ public class MainWindow extends javax.swing.JFrame {
         frameAssembly.setVisible(true);
     }
 
-    // Exemplo de método para gerar assembly (substitua pelo seu real)
-    private String gerarAssembly() {
-        // Aqui você deve retornar o código assembly gerado pelo seu compilador
-        return "; Exemplo de código assembly\nMOV AX, BX\nADD AX, 1";
+private String gerarAssembly() {
+    Lexico lex = new Lexico();
+    Sintatico sint = new Sintatico();
+    Semantico sem = new Semantico();
+
+    lex.setInput(sourceInput.getText()); // Define o código fonte como entrada
+
+    try {
+        // Realiza a análise léxica, sintática e semântica
+        sint.parse(lex, sem);
+
+        // Retorna o código assembly gerado
+        return sem.gerarCodigoAssembly();
+    } catch (LexicalError err) {
+        return "Erro léxico: " + err.getMessage();
+    } catch (SyntacticError err) {
+        return "Erro sintático: " + err.getMessage();
+    } catch (SemanticError err) {
+        return "Erro semântico: " + err.getMessage();
     }
+}
 
     public static void main(String args[]) {
         try {
