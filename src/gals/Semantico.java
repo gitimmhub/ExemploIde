@@ -70,7 +70,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
+        // System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
         switch (action) {
 
             case 1:
@@ -425,14 +425,7 @@ public class Semantico implements Constants {
                 break;
 
             case 25:
-                if(token != null) {
-                    if(oprel != null) {
-                        String rotulo = popRotulo();
-                        if (rotulo != null) {
-                            geradorAssembly.gerarInstrucao("ROT", rotulo);
-                        }
-                    }
-                }
+                
                 break;
 
             case 26:
@@ -448,6 +441,22 @@ public class Semantico implements Constants {
                 break;
 
             case 31:
+                if(token != null) {
+                    if(oprel != null) {
+                        String rotulo = popRotulo();
+                        // String rotElse = newRotulo();
+
+                        // if (rotElse != null) {
+                        //     geradorAssembly.gerarInstrucao("JMP", rotElse);
+                        // }
+
+                        // pushRotulo(rotElse);
+                        
+                        if (rotulo != null) {
+                            geradorAssembly.gerarInstrucao("ROT", rotulo);
+                        }
+                    }
+                }
                 break;
 
             case 32:
@@ -460,6 +469,9 @@ public class Semantico implements Constants {
                 break;
 
             case 35:
+                // String rotFor = newRotulo();
+                // pushRotulo(rotFor);
+                // geradorAssembly.gerarInstrucao("ROT", rotFor);
                 break;
 
             case 36:
@@ -469,6 +481,17 @@ public class Semantico implements Constants {
                 break;
 
             case 38:
+                if(token != null) {
+                    String rotWhileIni = popRotulo();
+                    String rotWhileFim = popRotulo();
+                    System.out.println("Gerando código para o loop while: " + rotWhileIni + " -> " + rotWhileFim);
+
+                    if (rotWhileFim != null) {
+                        geradorAssembly.gerarInstrucao("JMP", rotWhileFim);
+                    }
+
+                    geradorAssembly.gerarInstrucao("ROT", rotWhileIni);
+                }
                 break;
 
             case 39:
@@ -487,7 +510,6 @@ public class Semantico implements Constants {
 
             case 42:
                 if (token != null) {
-                    System.out.println(idAtribuicao);
                     String chaveAttr = idAtribuicao + "#" + escopoAtual;
                     Simbolo simboloAttr = symbolTable.get(chaveAttr);
                     if (simboloAttr != null) {
@@ -564,6 +586,17 @@ public class Semantico implements Constants {
                 }
                 break;
             
+            case 64:
+                
+            break;
+            
+            case 65:
+                String rotIniWhile = newRotulo();
+                pushRotulo(rotIniWhile);
+                geradorAssembly.gerarInstrucao("ROT", rotIniWhile);
+                System.out.println("Gerando código para o início do loop while: " + rotIniWhile);
+                break;
+
             case 67:
             String rotIf = newRotulo();
             pushRotulo(rotIf);
@@ -583,7 +616,38 @@ public class Semantico implements Constants {
                     }
                 }
                 break;
+            
+            case 69:
+            String rotFimWhile = newRotulo();
+            pushRotulo(rotFimWhile);
+               if (rotFimWhile != null) {
+                    if (oprel.equals("<")) { // if (A < B) then jump if (A < B)
+                        geradorAssembly.gerarInstrucao("BLT", rotFimWhile);
+                    } else if (oprel.equals(">")) { // if (A > B) then jump if (A > B)
+                        geradorAssembly.gerarInstrucao("BGT", rotFimWhile);
+                    } else if (oprel.equals("==")) { // if (A == B) then jump if (A == B)
+                        geradorAssembly.gerarInstrucao("BEQ", rotFimWhile);
+                    } else if (oprel.equals("!=")) { // if (A != B) then jump if (A != B)
+                        geradorAssembly.gerarInstrucao("BNE", rotFimWhile);
+                    } else if (oprel.equals("<=")) { // if (A <= B) then jump if (A <= B)
+                        geradorAssembly.gerarInstrucao("BLE", rotFimWhile);
+                    } else if (oprel.equals(">=")) { // if (A >= B) then jump if (A >= B)
+                        geradorAssembly.gerarInstrucao("BGE", rotFimWhile);
+                    }
+                }
+                break;
+            
+            case 72:
+                break;
+            
+            case 74:
+               
+                break;
 
+            case 79:
+              
+                break;
+            
             default:
                 break;
         }
