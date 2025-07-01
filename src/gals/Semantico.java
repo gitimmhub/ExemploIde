@@ -70,7 +70,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        // System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
+        System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
         switch (action) {
 
             case 1:
@@ -636,16 +636,50 @@ public class Semantico implements Constants {
                     }
                 }
                 break;
+
+            case 70:
+                String rotIniWHile = newRotulo();
+                pushRotulo(rotIniWHile);
+                geradorAssembly.gerarInstrucao("ROT", rotIniWHile);
+                break;
             
+            case 71:
+                String rotIniWhile2 = popRotulo();
+                if (oprel.equals("<")) { // if (A < B) then jump if (A < B)
+                        geradorAssembly.gerarInstrucao("BLT", rotIniWhile2);
+                    } else if (oprel.equals(">")) { // if (A > B) then jump if (A > B)
+                        geradorAssembly.gerarInstrucao("BGT", rotIniWhile2);
+                    } else if (oprel.equals("==")) { // if (A == B) then jump if (A == B)
+                        geradorAssembly.gerarInstrucao("BEQ", rotIniWhile2);
+                    } else if (oprel.equals("!=")) { // if (A != B) then jump if (A != B)
+                        geradorAssembly.gerarInstrucao("BNE", rotIniWhile2);
+                    } else if (oprel.equals("<=")) { // if (A <= B) then jump if (A <= B)
+                        geradorAssembly.gerarInstrucao("BLE", rotIniWhile2);
+                    } else if (oprel.equals(">=")) { // if (A >= B) then jump if (A >= B)
+                        geradorAssembly.gerarInstrucao("BGE", rotIniWhile2);
+                    }
+                break;
+
             case 72:
                 break;
             
             case 74:
                
                 break;
+            
+            case 75:
+                
+                String nome = token.getLexeme();
+                geradorAssembly.gerarInstrucao("ROT","_", nome);
+
+                break;
 
             case 79:
               
+                break;
+
+            case 97:
+                
                 break;
             
             default:

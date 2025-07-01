@@ -87,6 +87,15 @@ public class blipSim {
         codigo.append(instrucao).append(" ").append(operando).append("\n");
     }
 
+    
+    public void gerarInstrucao(String instrucao, String instrucao_aux, String operando) {
+        if (instrucao.equals("ROT")) {
+            codigo.append(instrucao_aux).append(operando).append(":\n");
+            return;
+        }
+        codigo.append(instrucao).append(" ").append(instrucao_aux).append(operando).append("\n");
+    }
+
     public void addData(String id, String valor) {
         dataSection.append(id).append(" : ").append(valor).append("\n");
     }
