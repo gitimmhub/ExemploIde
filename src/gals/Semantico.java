@@ -24,6 +24,8 @@ public class Semantico implements Constants {
     private boolean inicializarAgora = false;
     private boolean isFuncaoDeclarando = false;
     private boolean aguardandoOperador = false;
+    private String nomeFuncao = null;
+    private int numParametros = 0;
 
     private Stack<String> labelStack = new Stack<>();
     private int labelCounter = 0;
@@ -70,7 +72,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
+        //System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
         switch (action) {
 
             case 1:
@@ -85,7 +87,9 @@ public class Semantico implements Constants {
                     simboloUsoUse.setFlagUsada(true);
 
                     // Só gera LD se for identificador válido
-                    if (token.getId() == Constants.t_ID) {
+                    if (token.getId() == Constants.t_ID && !token.getLexeme().equals(nomeFuncao)) {
+                        System.out.println("teste " + token.getLexeme());
+                        System.out.println(nomeFuncao);
                         geradorAssembly.gerarInstrucao("LD", token.getLexeme());
                     }
                 } else {
@@ -395,6 +399,9 @@ public class Semantico implements Constants {
 
 
             case 22:
+                if(!nomeFuncao.equals("main")) {
+                    geradorAssembly.gerarInstrucao("RETURN", "0");
+                }
                 break;
 
             case 23:
@@ -498,14 +505,15 @@ public class Semantico implements Constants {
                 break;
 
             case 40:
+                geradorAssembly.gerarInstrucao("CALL", "_" + nomeFuncao);
                 break;
 
             case 41:
-                // Só gera LDI se for um literal numérico
-                if (token != null && (token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_DECIMAL)) {
-                    geradorAssembly.gerarInstrucao("LDI", idAtual);
-                    geradorAssembly.gerarInstrucao("STO", "$out_port");
-                }
+                // // Só gera LDI se for um literal numérico
+                // if (token != null && (token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_INTEIRO || token.getId() == Constants.t_DECIMAL)) {
+                //     geradorAssembly.gerarInstrucao("LDI", idAtual);
+                //     geradorAssembly.gerarInstrucao("STO", "$out_port");
+                // }
                 break;
 
             case 42:
@@ -671,7 +679,13 @@ public class Semantico implements Constants {
                 
                 String nome = token.getLexeme();
                 geradorAssembly.gerarInstrucao("ROT","_", nome);
+                nomeFuncao = nome; // Armazena o nome da função
 
+                break;
+            
+            case 77:
+                nomeFuncao = token.getLexeme();
+                numParametros = 0; // Reseta o contador de parâmetros
                 break;
 
             case 79:
@@ -679,7 +693,17 @@ public class Semantico implements Constants {
                 break;
 
             case 97:
-                
+                if (token != null && token.getId() == Constants.t_ID) {
+                    geradorAssembly.gerarInstrucao("LD", token.getLexeme());
+                    geradorAssembly.gerarInstrucao("STO", nomeFuncao + numParametros);
+                    geradorAssembly.addData(nomeFuncao + numParametros, "0");
+                    numParametros++;
+                } else {
+                    geradorAssembly.gerarInstrucao("LDI", token.getLexeme());
+                    geradorAssembly.gerarInstrucao("STO", nomeFuncao + numParametros);
+                    geradorAssembly.addData(nomeFuncao + numParametros, "0");
+                    numParametros++;
+                }
                 break;
             
             default:
