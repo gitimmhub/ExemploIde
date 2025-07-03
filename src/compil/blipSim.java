@@ -1,6 +1,5 @@
 package compil;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -12,7 +11,7 @@ public class blipSim {
 
     public blipSim() {
         dataSection = new StringBuilder(".data\n");
-        textSection = new StringBuilder(".text\n");
+        textSection = new StringBuilder(".text\nJMP _main \n");
         codigo = new StringBuilder();
     }
 

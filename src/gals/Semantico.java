@@ -63,6 +63,13 @@ public class Semantico implements Constants {
         return null;
     }
 
+    private String peekRotulo() {
+        if(!labelStack.isEmpty()) {
+            return labelStack.peek();
+        }
+        return null;
+    }
+
     public compil.TabelaSimbolos getTabelaSimbolos() {
         compil.TabelaSimbolos tabela = new compil.TabelaSimbolos();
         for (Simbolo simbolo : symbolTable.values()) {
@@ -72,7 +79,7 @@ public class Semantico implements Constants {
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
-        //System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
+        System.out.println("Executando ação: " + action + " com token: " + (token != null ? token.getLexeme() : "null"));
         switch (action) {
 
             case 1:
@@ -88,13 +95,13 @@ public class Semantico implements Constants {
 
                     // Só gera LD se for identificador válido
                     if (token.getId() == Constants.t_ID && !token.getLexeme().equals(nomeFuncao)) {
-                        System.out.println("teste " + token.getLexeme());
-                        System.out.println(nomeFuncao);
+                        // System.out.println("teste " + token.getLexeme());
+                        // System.out.println(nomeFuncao);
                         geradorAssembly.gerarInstrucao("LD", token.getLexeme());
                     }
                 } else {
                     if (tipoAtual == null) {
-                        throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
+                        //throw new SemanticError("Variável '" + token.getLexeme() + "' usada sem declaração.");
                     } else if (isFuncaoDeclarando) {
                         String chaveFunc = idAtual + "#" + escopoAtual;
                         if (symbolTable.containsKey(chaveFunc)) {
@@ -595,7 +602,11 @@ public class Semantico implements Constants {
                 break;
             
             case 64:
-                
+                String rotuloIf = popRotulo();
+                String rotuloElse = newRotulo();
+                    geradorAssembly.gerarInstrucao("JMP", rotuloElse);
+                    pushRotulo(rotuloElse);
+                    geradorAssembly.gerarInstrucao("ROT", rotuloIf);
             break;
             
             case 65:
@@ -694,7 +705,6 @@ public class Semantico implements Constants {
 
             case 97:
                 if (token != null && token.getId() == Constants.t_ID) {
-                    geradorAssembly.gerarInstrucao("LD", token.getLexeme());
                     geradorAssembly.gerarInstrucao("STO", nomeFuncao + numParametros);
                     geradorAssembly.addData(nomeFuncao + numParametros, "0");
                     numParametros++;
